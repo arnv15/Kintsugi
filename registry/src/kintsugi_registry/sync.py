@@ -1,9 +1,9 @@
 """Keeping the Skill directory in step with a shared git repository.
 
 ADR-0001 treats the Registry as reachable by any agent on any machine, which a
-directory on one laptop is not. When the Skill directory is a git working tree,
-each published Skill is committed and pushed, and the git history becomes the
-Registry's provenance record — who published which Skill, and when.
+directory on one laptop is not. When the Skill directory is itself a git
+worktree root, each published Skill is committed and pushed, and the git history
+becomes the Registry's provenance record — who published which Skill, and when.
 
 Refreshing is deliberately *not* done per search. ADR-0006 makes wall-clock a
 reported metric, and a network round trip inside `search_skills` would land in
@@ -46,7 +46,7 @@ class NoRemote:
 
 
 class GitRemote:
-    """A Skill directory that is a git working tree with somewhere to push to."""
+    """A Skill directory that is a git worktree root with somewhere to push to."""
 
     def __init__(self, root: Path) -> None:
         self.root = root
@@ -156,20 +156,23 @@ def ensure_clone(root: Path, remote: str | None) -> str:
 def build_sync(root: Path) -> NoRemote | GitRemote:
     """Pick a sync strategy by looking at the Skill directory.
 
-    Being a git working tree with a remote is the whole condition — no separate
-    switch to forget to turn on, and a plain directory keeps working untouched.
+    The Skill directory must itself be a git worktree root with a remote. Merely
+    being nested in another repository is not enough: a rehearsal store must
+    never commit or push through its parent checkout.
     """
     if not root.is_dir():
         return NoRemote()
 
-    inside = subprocess.run(
-        ["git", "rev-parse", "--is-inside-work-tree"],
+    top_level = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
         cwd=root,
         capture_output=True,
         text=True,
         timeout=GIT_TIMEOUT_SECONDS,
     )
-    if inside.returncode != 0 or inside.stdout.strip() != "true":
+    if top_level.returncode != 0:
+        return NoRemote()
+    if Path(top_level.stdout.strip()).resolve() != root.resolve():
         return NoRemote()
 
     remotes = subprocess.run(

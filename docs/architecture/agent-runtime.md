@@ -43,6 +43,8 @@ Run records `null` rather than inventing zero usage.
 | [`agent/src/kintsugi_agent/worktrees.py`](../../agent/src/kintsugi_agent/worktrees.py) | Creates detached worktrees from `baseline` |
 | [`agent/src/kintsugi_agent/events.py`](../../agent/src/kintsugi_agent/events.py) | Validates and appends the JSONL contract |
 | [`agent/src/kintsugi_agent/live_pair_cli.py`](../../agent/src/kintsugi_agent/live_pair_cli.py) | Drives and validates the paid Research-to-Reuse acceptance pair |
+| [`agent/src/kintsugi_agent/rehearsal_cli.py`](../../agent/src/kintsugi_agent/rehearsal_cli.py) | Resets one rehearsal Registry scope and gives each cold-to-warm attempt fresh retained artifacts |
+| [`scripts/rehearse_cold_warm.sh`](../../scripts/rehearse_cold_warm.sh) | Repeatable operator entrypoint for the first paired Seeded Bugs |
 
 ## One Run, end to end
 
@@ -233,6 +235,16 @@ dry-run and demo verification rather than the fast unit suite. The opt-in
 against `scheduling` and `reports`: Research then publish, followed by Reuse in
 a second fresh worktree with zero `source_read` events.
 
+The issue #8 `scripts/rehearse_cold_warm.sh` entrypoint wraps that pair with a
+safe Registry scope reset. It validates the first Run immediately and will not
+start the paired Run unless `registry_queried{decision:"research"}`, at least
+one `source_read`, a passing `run_finished`, and `skill_published` are present.
+It then applies the complete pair validator. Each repetition keeps prior
+artifacts under a unique attempt ID while resetting only the scoped Skill
+directory. Its Registry environment sets `KINTSUGI_SKILLS_REMOTE` to empty, so
+ambient shared-store configuration cannot clone Skills back into the cold
+scope.
+
 The package also tests the exported Run boundary for fresh worktree commands,
 test restoration, two-attempt stopping, SDK configuration, metrics, Skill
 installation, event validation, and publish-only-after-green.
@@ -242,5 +254,7 @@ installation, event validation, and publish-only-after-green.
 `kintsugi-agent` takes one Run ID, Seeded Bug ID, Root Cause Class metadata, test
 directory, and verification command. It retains the worktree under
 `.kintsugi/runs/` and appends to `events.jsonl`; both paths can be overridden.
+`kintsugi-agent-rehearse` owns the first cold-to-warm pair and its scoped
+Registry lifecycle.
 The complete command and Registry configuration are documented in
 [`agent/README.md`](../../agent/README.md).

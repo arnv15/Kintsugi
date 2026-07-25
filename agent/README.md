@@ -74,3 +74,28 @@ Skill to a new local Registry. It then fixes the paired `reports` bug in another
 baseline worktree and fails unless that Run reuses the published Skill, reads
 zero web sources, and passes. Artifacts are retained under
 `.kintsugi/live-pairs/<pair-id>/`; use `--pair-id` to name a rehearsal.
+
+## Rehearse cold to warm repeatedly
+
+The issue #8 rehearsal script gives the pair a stable, resettable Registry scope
+and a fresh artifact directory on every invocation:
+
+```bash
+scripts/rehearse_cold_warm.sh
+```
+
+It resets only
+`.kintsugi/rehearsals/dst-cold-warm/skills`, aborts before the second Run unless
+the `scheduling` Run proves the Research Path and publishes a Skill, and then
+fails unless paired bug `reports` proves the Reuse Path with zero
+`source_read` events. Every invocation gets a timestamp-plus-random attempt ID,
+so earlier worktrees and event proof remain inspectable and no manual cleanup
+is required. The pair explicitly disables `KINTSUGI_SKILLS_REMOTE`, so an
+ambient shared-Registry configuration cannot refill the empty rehearsal scope.
+
+Use `--scope` to name a separate rehearsal Registry or `--attempt-id` to give
+one attempt a predictable artifact name:
+
+```bash
+scripts/rehearse_cold_warm.sh --scope stage --attempt-id dress-rehearsal-1
+```

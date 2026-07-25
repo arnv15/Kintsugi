@@ -28,9 +28,11 @@ publishing agent as the commit author, so `git log` is the provenance record.
 
 A failed push never costs the Skill. It is written to disk first, and the
 publish result reports `sync: {"pushed": false, "detail": "..."}` so the push
-can be retried by hand. Refreshing happens on startup rather than per search,
-because ADR-0006 reports wall-clock per Run and a network round trip inside
-`search_skills` would land inside the number being measured.
+can be retried by hand. The Skill directory must be the git worktree root;
+merely nesting it inside another checkout never enables sync. Refreshing happens
+on startup rather than per search, because ADR-0006 reports wall-clock per Run
+and a network round trip inside `search_skills` would land inside the number
+being measured.
 
 A plain, non-git directory keeps working exactly as before.
 
@@ -117,6 +119,21 @@ uv run --directory registry kintsugi-registry-admin clear --yes
 `list` shows what is stored; `--dry-run` shows what `clear` would remove;
 without `--yes`, `clear` refuses and exits non-zero. All three accept
 `--skills-dir` to act on a directory other than the default.
+
+For repeatable rehearsals, prefer a named scope over the shared default:
+
+```bash
+uv run --project registry kintsugi-registry-admin scope dst-cold-warm \
+  --rehearsals-root .kintsugi/rehearsals \
+  --reset
+```
+
+This creates or resets only
+`.kintsugi/rehearsals/dst-cold-warm/skills`. A scope must be one safe directory
+name, and the command refuses symlinked scope or Skill directories so reset
+cannot escape into another store. A symlinked child Skill is unlinked without
+following or changing its target. Other scopes, retained worktrees, and event
+logs are not removed.
 
 ## Tests
 

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
+from .paths import require_safe_directory_name
 from .verification import CommandRunner, run_command
 
 
@@ -29,8 +29,7 @@ class WorktreeManager:
 
     async def create(self, run_id: str) -> Path:
         """Create a new detached worktree and refuse to reuse any existing path."""
-        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", run_id):
-            raise ValueError("run_id must be a safe single directory name")
+        require_safe_directory_name(run_id, field="run_id")
 
         target = self.runs_root / run_id
         if target.exists():

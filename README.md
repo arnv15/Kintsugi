@@ -37,3 +37,18 @@ Registry over MCP, enforces test and citation policy with hooks, restores tests
 before verification, and appends the real Run to `events.jsonl`.
 
 See [`agent/README.md`](agent/README.md) for the command and configuration.
+
+## Repeat the cold-to-warm rehearsal
+
+After syncing the `agent/` and `registry/` environments and configuring Claude
+Code authentication, run:
+
+```sh
+scripts/rehearse_cold_warm.sh
+```
+
+Each invocation resets only
+`.kintsugi/rehearsals/dst-cold-warm/skills`, runs `scheduling` and proves it
+took the Research Path, then runs paired bug `reports` and proves it took the
+Reuse Path with zero source reads. Prior worktrees and event logs remain under a
+unique attempt directory, so the command can be repeated without cleanup.

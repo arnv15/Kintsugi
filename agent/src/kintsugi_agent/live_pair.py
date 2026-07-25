@@ -10,6 +10,36 @@ class LivePairError(AssertionError):
     """A paid live pair did not satisfy the issue #6 acceptance contract."""
 
 
+def validate_research_run(
+    events: Iterable[Mapping[str, Any]],
+    research_run_id: str,
+) -> dict[str, str | int]:
+    """Prove the first Run took the Research Path and published on green."""
+    research = [
+        event for event in events if event.get("run_id") == research_run_id
+    ]
+    if not research:
+        raise LivePairError("the Research Run must append events")
+
+    _require_decision(research, "research", research_run_id)
+    _require_pass(research, research_run_id)
+    research_sources = _count(research, "source_read")
+    if research_sources < 1:
+        raise LivePairError("the Research Run must append at least one source_read")
+
+    published = _last(research, "skill_published")
+    if published is None:
+        raise LivePairError("the green Research Run must publish a Skill")
+    published_id = published.get("skill_id")
+    if not isinstance(published_id, str) or not published_id:
+        raise LivePairError("skill_published must identify the published Skill")
+
+    return {
+        "skill_id": published_id,
+        "research_sources": research_sources,
+    }
+
+
 def validate_live_pair(
     events: Iterable[Mapping[str, Any]],
     research_run_id: str,
@@ -25,35 +55,26 @@ def validate_live_pair(
     if not research or not reuse:
         raise LivePairError("both live Runs must append events")
 
-    _require_decision(research, "research", research_run_id)
+    research_summary = validate_research_run(research, research_run_id)
     _require_decision(reuse, "reuse", reuse_run_id)
-    _require_pass(research, research_run_id)
     _require_pass(reuse, reuse_run_id)
 
-    research_sources = _count(research, "source_read")
     reuse_sources = _count(reuse, "source_read")
-    if research_sources < 1:
-        raise LivePairError("the Research Run must append at least one source_read")
     if reuse_sources != 0:
         raise LivePairError("the Reuse Run must append zero source_read events")
 
-    published = _last(research, "skill_published")
     reused = _last(reuse, "skill_reused")
-    if published is None:
-        raise LivePairError("the green Research Run must publish a Skill")
     if reused is None:
         raise LivePairError("the Reuse Run must install and reuse a Skill")
 
-    published_id = published.get("skill_id")
+    published_id = research_summary["skill_id"]
     reused_id = reused.get("skill_id")
-    if not isinstance(published_id, str) or not published_id:
-        raise LivePairError("skill_published must identify the published Skill")
     if reused_id != published_id:
         raise LivePairError("the second Run must reuse the first Run's Skill")
 
     return {
         "skill_id": published_id,
-        "research_sources": research_sources,
+        "research_sources": research_summary["research_sources"],
         "reuse_sources": reuse_sources,
     }
 
