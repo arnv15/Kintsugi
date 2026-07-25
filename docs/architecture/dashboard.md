@@ -33,10 +33,14 @@ During a demo, a viewer should be able to answer:
 The page is one scroll, with `<nav>` anchors jumping to each part:
 
 1. **Hero** — the live summary counts (completed Runs, Skills, verified fixes).
-2. **How it works** (`#how-it-works`) — four static cards naming the real
-   flow: diagnose, ask the Registry, reuse or research, verify and publish.
-   Not derived from live data; wording must be kept in sync with
-   [`docs/architecture/skill-registry.md`](skill-registry.md) by hand.
+2. **How it works** (`#how-it-works`) — a `.seam-steps` timeline (a single
+   gold seam connecting four lit nodes, echoing the brand mark's mended
+   crack) naming the real flow: diagnose, ask the Registry, reuse or
+   research, verify and publish. Not derived from live data; wording must be
+   kept in sync with [`docs/architecture/skill-registry.md`](skill-registry.md)
+   by hand. This is the page's one authored scroll-reveal moment — each
+   `.seam-step` fades in and lights its node in sequence; nothing else on the
+   page repeats that entrance.
 3. **Install** (`#install`) — the two commands from
    [`registry/README.md`](../../registry/README.md) (run the Registry over
    MCP, or clone the Skills as plain files), each with a copy-to-clipboard
@@ -45,15 +49,20 @@ The page is one scroll, with `<nav>` anchors jumping to each part:
 4. **Dashboard** (`#dashboard`) — the three live sections below, unchanged in
    behavior: Run comparisons, Portable Skills, Latest activity.
 
-Every `[data-reveal]` element (the step cards, install cards, and dashboard
-intro) fades and slides in once via `IntersectionObserver`
-(`initScrollReveal`), staggered per group. `initScrollReveal` itself only
-special-cases a missing `IntersectionObserver` (reveals everything
-immediately); `prefers-reduced-motion` is handled separately in
-`styles.css`, which forces `[data-reveal]` to its visible state outright, so
-the observer still runs but has nothing left to animate. Copy buttons
-(`initCopyButtons`) write the code block's own `textContent` to the
-clipboard, so the button can never drift from the command it displays.
+Section headings are heading-plus-description only; the hero's eyebrow
+("Live evidence, not promises") is the page's one named kicker; no other
+section repeats an uppercase label or a digit prefix above its `<h2>`.
+
+Every `[data-reveal]` element (the four `.seam-step` items) fades and slides
+in once via `IntersectionObserver` (`initScrollReveal`), staggered per item;
+`.seam-step.is-visible .seam-node` additionally fills and glows, drawing the
+seam through the sequence. `initScrollReveal` itself only special-cases a
+missing `IntersectionObserver` (reveals everything immediately);
+`prefers-reduced-motion` is handled separately in `styles.css`, which forces
+`[data-reveal]` to its visible state outright, so the observer still runs but
+has nothing left to animate. Copy buttons (`initCopyButtons`) write the code
+block's own `textContent` to the clipboard, so the button can never drift
+from the command it displays.
 
 ## Inputs
 

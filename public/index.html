@@ -59,19 +59,16 @@
 
       <section class="explainer-section" id="how-it-works" aria-labelledby="how-it-works-title">
         <div class="section-heading">
-          <div>
-            <p class="section-index">How it works</p>
-            <h2 id="how-it-works-title">One fix, mended for reuse</h2>
-          </div>
+          <h2 id="how-it-works-title">One fix, mended for reuse</h2>
           <p>
             A cracked pot mended with gold seams is stronger at the break.
             Kintsugi treats a bug the same way: the repair itself becomes the
             valuable part.
           </p>
         </div>
-        <ol class="step-grid">
-          <li class="step-card" data-reveal>
-            <span class="step-mark">01</span>
+        <ol class="seam-steps">
+          <li class="seam-step" data-reveal>
+            <span class="seam-node" aria-hidden="true"></span>
             <h3>Diagnose</h3>
             <p>
               A Run begins with one sentence: the Root Cause Hypothesis — the
@@ -79,24 +76,24 @@
               it surfaces.
             </p>
           </li>
-          <li class="step-card" data-reveal>
-            <span class="step-mark">02</span>
+          <li class="seam-step" data-reveal>
+            <span class="seam-node" aria-hidden="true"></span>
             <h3>Ask the Registry</h3>
             <p>
               That hypothesis goes to the shared Skill Registry. The Registry,
               not the agent, decides the next step: reuse or research.
             </p>
           </li>
-          <li class="step-card" data-reveal>
-            <span class="step-mark">03</span>
+          <li class="seam-step" data-reveal>
+            <span class="seam-node" aria-hidden="true"></span>
             <h3>Reuse or research</h3>
             <p>
               A match installs the winning Skill's strategy outright. No match
               means reading primary sources and building a fix from scratch.
             </p>
           </li>
-          <li class="step-card" data-reveal>
-            <span class="step-mark">04</span>
+          <li class="seam-step" data-reveal>
+            <span class="seam-node" aria-hidden="true"></span>
             <h3>Verify, then publish</h3>
             <p>
               A fix only counts once its tests pass. A verified Research Path
@@ -108,10 +105,7 @@
 
       <section class="install-section" id="install" aria-labelledby="install-title">
         <div class="section-heading">
-          <div>
-            <p class="section-index">Install</p>
-            <h2 id="install-title">Join the shared Registry</h2>
-          </div>
+          <h2 id="install-title">Join the shared Registry</h2>
           <p>
             The Registry is a standalone MCP server. Point any Claude Code or
             Agent SDK client at it, or skip the server entirely and install
@@ -119,7 +113,7 @@
           </p>
         </div>
         <div class="install-grid">
-          <div class="install-card" data-reveal>
+          <div class="install-card">
             <p class="install-label">Run the Registry over MCP</p>
             <pre class="code-block"><code id="install-command-registry">KINTSUGI_SKILLS_REMOTE=https://github.com/arnv15/kintsugi-skills.git \
   uvx --from "git+https://github.com/arnv15/Kintsugi#subdirectory=registry" kintsugi-registry</code></pre>
@@ -127,7 +121,7 @@
               Copy
             </button>
           </div>
-          <div class="install-card" data-reveal>
+          <div class="install-card">
             <p class="install-label">Or install Skills as plain files</p>
             <pre class="code-block"><code id="install-command-clone">git clone https://github.com/arnv15/kintsugi-skills .claude/skills/kintsugi</code></pre>
             <button type="button" class="copy-button" data-copy-target="install-command-clone">
@@ -137,8 +131,7 @@
         </div>
       </section>
 
-      <div class="dashboard-intro" id="dashboard" data-reveal>
-        <p class="section-index">Dashboard</p>
+      <div class="dashboard-intro" id="dashboard">
         <h2>Live evidence from the event log</h2>
         <p>
           Everything below is read straight from <code>/events</code>,
@@ -149,10 +142,7 @@
 
       <section class="dashboard-section comparisons-section" aria-labelledby="comparisons-title">
         <div class="section-heading">
-          <div>
-            <p class="section-index">01 · Evidence</p>
-            <h2 id="comparisons-title">Run comparisons</h2>
-          </div>
+          <h2 id="comparisons-title">Run comparisons</h2>
           <p>
             Research and Reuse Paths are compared only within the same Root
             Cause Class, where the work is genuinely comparable.
@@ -165,10 +155,7 @@
 
       <section class="dashboard-section" aria-labelledby="skills-title">
         <div class="section-heading">
-          <div>
-            <p class="section-index">02 · Memory</p>
-            <h2 id="skills-title">Portable Skills</h2>
-          </div>
+          <h2 id="skills-title">Portable Skills</h2>
           <p>
             Each Skill captures one Root Cause Class, its verified strategy, and
             the primary sources that support it.
@@ -181,10 +168,7 @@
 
       <section class="dashboard-section activity-section" aria-labelledby="activity-title">
         <div class="section-heading">
-          <div>
-            <p class="section-index">03 · Trace</p>
-            <h2 id="activity-title">Latest activity</h2>
-          </div>
+          <h2 id="activity-title">Latest activity</h2>
           <p>
             A plain-language view of every append-only event, in the exact order
             it was recorded.
