@@ -1,0 +1,37 @@
+[project]
+name = "kintsugi-registry"
+version = "0.1.0"
+description = "Kintsugi Skill Registry — an MCP server over a directory of SKILL.md documents"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp>=1.2",
+    "rapidfuzz>=3.6",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+kintsugi-registry = "kintsugi_registry.server:main"
+kintsugi-registry-admin = "kintsugi_registry.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "pyright>=1.1.390",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/kintsugi_registry"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.11"
+typeCheckingMode = "standard"
