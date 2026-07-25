@@ -48,7 +48,9 @@ shared git-backed store. `KINTSUGI_SKILLS_DIR` and
   immediately before the configured test command.
 - The SDK loop stops after the second failed verification attempt.
 - Any source edit after a green verification invalidates that result.
-- Only a currently green Research Path Run may publish a Skill.
+- Bash is closed after green verification so the verified state cannot change.
+- Only a currently green Research Path Run may publish a Skill, and every
+  published citation must have been read during that Run.
 
 ## Verify the package
 

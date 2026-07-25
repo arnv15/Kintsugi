@@ -98,6 +98,11 @@ class EditPolicyTests(unittest.IsolatedAsyncioTestCase):
             {"signal": None},
         )
         await self.events.append(
+            "source_read",
+            url="https://docs.python.org/primary",
+            title="Primary documentation",
+        )
+        await self.events.append(
             "tests_run",
             passed=1,
             failed=0,
@@ -107,7 +112,10 @@ class EditPolicyTests(unittest.IsolatedAsyncioTestCase):
             {
                 "hook_event_name": "PreToolUse",
                 "tool_name": "mcp__kintsugi-skill-registry__publish_skill",
-                "tool_input": {"name": "A Root Cause Class"},
+                "tool_input": {
+                    "name": "A Root Cause Class",
+                    "sources": ["https://docs.python.org/primary"],
+                },
             },
             None,
             {"signal": None},
@@ -144,6 +152,66 @@ class EditPolicyTests(unittest.IsolatedAsyncioTestCase):
                 "hook_event_name": "PreToolUse",
                 "tool_name": "mcp__kintsugi-skill-registry__publish_skill",
                 "tool_input": {"name": "A Root Cause Class"},
+            },
+            None,
+            {"signal": None},
+        )
+
+        self.assertEqual(
+            "deny",
+            decision["hookSpecificOutput"]["permissionDecision"],
+        )
+
+    async def test_bash_is_denied_after_green_verification(self) -> None:
+        await self.events.append(
+            "tests_run",
+            passed=1,
+            failed=0,
+            output_tail="Ran 1 test\nOK",
+        )
+
+        decision = await self.hooks.pre_tool_use(
+            {
+                "hook_event_name": "PreToolUse",
+                "tool_name": "Bash",
+                "tool_input": {"command": "sed -i '' 's/old/new/' sandbox/bug.py"},
+            },
+            None,
+            {"signal": None},
+        )
+
+        self.assertEqual(
+            "deny",
+            decision["hookSpecificOutput"]["permissionDecision"],
+        )
+
+    async def test_publish_sources_must_have_been_read(self) -> None:
+        await self.events.append(
+            "registry_queried",
+            decision="research",
+            top_score=0.0,
+            skill_id=None,
+        )
+        await self.events.append(
+            "source_read",
+            url="https://docs.python.org/primary",
+            title="Primary documentation",
+        )
+        await self.events.append(
+            "tests_run",
+            passed=1,
+            failed=0,
+            output_tail="Ran 1 test\nOK",
+        )
+
+        decision = await self.hooks.pre_tool_use(
+            {
+                "hook_event_name": "PreToolUse",
+                "tool_name": "mcp__kintsugi-skill-registry__publish_skill",
+                "tool_input": {
+                    "name": "Root Cause Class",
+                    "sources": ["https://example.test/fabricated"],
+                },
             },
             None,
             {"signal": None},

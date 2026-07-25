@@ -48,6 +48,11 @@ class RunHooks:
                 }
 
         if tool_name == "Bash":
+            if await self.events.current_verification_passed():
+                return _permission(
+                    "deny",
+                    "Bash is closed after passing verification so the verified source state cannot change.",
+                )
             command = input_data.get("tool_input", {}).get("command", "")
             if isinstance(command, str) and _looks_like_verification(command):
                 return _permission(
@@ -68,9 +73,25 @@ class RunHooks:
                     "deny",
                     "A Skill may be published only after passing tests on the Research Path.",
                 )
+            raw_sources = input_data.get("tool_input", {}).get("sources")
+            observed_sources = await self.events.source_urls()
+            if (
+                not isinstance(raw_sources, list)
+                or not raw_sources
+                or any(
+                    not isinstance(source, str)
+                    or not source
+                    or source not in observed_sources
+                    for source in raw_sources
+                )
+            ):
+                return _permission(
+                    "deny",
+                    "Every published Skill citation must be a source read during this Research Run.",
+                )
             return _permission(
                 "allow",
-                "The Research Path fix passed its restored verification tests.",
+                "The Research Path fix passed and its Skill citations were observed.",
             )
 
         if tool_name == "WebFetch":

@@ -213,9 +213,12 @@ tooling.
 - A Run stops after two failed attempts.
 - A source edit after passing tests invalidates that pass and requires another
   verification attempt.
+- Bash is denied after a passing verification so shell-side mutations cannot
+  make that green result stale.
 - Failed Runs remain in the event feed and are excluded from metric
   comparisons.
-- Only a passing Research Path Run may call `publish_skill`.
+- Only a passing Research Path Run may call `publish_skill`, and its citations
+  must be URLs observed through `WebFetch` during that Run.
 - Emit `skill_published` only after the Registry confirms durable publication.
 - A publish validation rejection returns feedback and may be retried; it does
   not turn a green fix into a failed fix.
