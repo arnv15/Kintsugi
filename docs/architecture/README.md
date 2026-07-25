@@ -11,8 +11,8 @@ module pages explain the implementation details.
 ## Status at a glance
 
 - **Current:** the Seeded Bug sandbox, event fixture/server, dashboard, MCP
-  Skill Registry, agent runtime, and guarded six-Run capture command are
-  implemented.
+  Skill Registry, agent runtime, guarded six-Run capture command, and repeatable
+  cold-to-warm rehearsal tooling are implemented.
 - **Pending evidence:** the paid six-Run command still needs to produce and
   validate the real issue #7 capture before that ticket can close.
 
@@ -70,9 +70,9 @@ mindmap
       Agent runtime
       Skill Registry over MCP
       Six Run capture driver
+      Cold-to-warm rehearsal
     Pending artifacts
       Real six Run event log
-      Rehearsal tooling
     Trust rules
       Citations before code changes
       Append-only factual event history
@@ -86,8 +86,11 @@ Solid boxes marked **current** exist in this repository. Boxes marked
 
 ```mermaid
 flowchart TD
-  operator["Demo operator confirms model budget"] --> capture["Six-Run capture driver<br/>current"]
+  operator["Operator starts a Run, rehearsal, or capture"] --> capture["Six-Run capture driver<br/>current"]
   capture --> worktree["Fresh worktree from baseline<br/>current"]
+  operator --> scope["Reset isolated rehearsal Skill scope<br/>current"]
+  scope --> worktree["Fresh worktree from baseline<br/>current"]
+  operator --> worktree
   sandbox["Seeded Bug sandbox<br/>current"] --> worktree
   worktree --> agent["Agent runtime<br/>current"]
   agent --> hypothesis["Root Cause Hypothesis"]
@@ -137,6 +140,7 @@ The thing being measured therefore does not grade its own work.
 | Skill Registry | Current | Lets any MCP-capable agent find, retrieve, publish, and list portable Skills | [Skill Registry](skill-registry.md) |
 | Agent runtime | Current | Runs the diagnosis, research/reuse, edit, verification, and event-writing loop | [Agent runtime](agent-runtime.md) |
 | Seeded Bug sandbox | Current | Supplies six controlled bugs and a clean baseline for fair, isolated Runs | [Sandbox](sandbox.md) |
+| Rehearsal tooling | Current | Resets one isolated Registry scope and proves the first sandbox pair takes Research then Reuse without cleanup | [Agent runtime](agent-runtime.md) |
 
 ## Shared contracts
 
@@ -185,7 +189,8 @@ flowchart LR
   event --> dashboard["Dashboard<br/>#5 implemented"]
   runtime --> capture["Six-Run capture driver<br/>#7 implemented"]
   capture --> evidence["Real paid capture<br/>#7 pending"]
-  runtime --> rehearsal["Rehearsal tooling<br/>#8 planned"]
+  runtime --> rehearsal["Rehearsal tooling<br/>#8 complete"]
+  registry --> rehearsal
 ```
 
 The dashboard was intentionally built against the fixture. When the agent

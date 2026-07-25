@@ -2,10 +2,31 @@ from __future__ import annotations
 
 import unittest
 
-from kintsugi_agent.live_pair import LivePairError, validate_live_pair
+from kintsugi_agent.live_pair import (
+    LivePairError,
+    validate_live_pair,
+    validate_research_run,
+)
 
 
 class LivePairValidationTests(unittest.TestCase):
+    def test_research_proof_rejects_a_contaminated_first_run(self) -> None:
+        events = [
+            {
+                "run_id": "research",
+                "type": "registry_queried",
+                "decision": "reuse",
+            },
+            {
+                "run_id": "research",
+                "type": "run_finished",
+                "outcome": "passed",
+            },
+        ]
+
+        with self.assertRaisesRegex(LivePairError, "decision 'research'"):
+            validate_research_run(events, "research")
+
     def test_accepts_research_then_reuse_without_second_run_sources(self) -> None:
         events = [
             {

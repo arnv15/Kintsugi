@@ -76,8 +76,9 @@ class SkillStore:
     def clear(self) -> list[str]:
         """Remove every stored Skill and return the ids removed.
 
-        Only directories that actually hold a `SKILL.md` are deleted, so a root
-        that a person has pointed at the wrong place loses nothing else.
+        Only entries that resolve to a directory holding `SKILL.md` are removed,
+        so a root that a person has pointed at the wrong place loses nothing else.
+        A top-level symlink is unlinked without traversing its target.
         """
         if not self.root.is_dir():
             return []
@@ -85,6 +86,10 @@ class SkillStore:
         removed = []
         for child in sorted(self.root.iterdir()):
             if not child.is_dir() or not (child / SKILL_FILENAME).is_file():
+                continue
+            if child.is_symlink():
+                child.unlink()
+                removed.append(child.name)
                 continue
             _remove_tree(child)
             removed.append(child.name)

@@ -182,16 +182,30 @@ same stored documents to the dashboard.
 
 ## Reset and rehearsal isolation
 
-Issue #8 requires a cold-to-warm sequence to be repeatable. The Registry
-therefore needs a maintenance capability to clear a rehearsal store or select a
-fresh scoped root.
+Issue #8's cold-to-warm sequence is repeatable through an operator-only scoped
+reset:
 
-That capability should not silently become a fifth agent-facing MCP tool:
-ordinary agents need read and publish access, not permission to erase shared
-learning. The planned rehearsal command can instead stop the server, clear a
-known rehearsal-only directory, or start it with a new scoped
-`<registry-root>`. Issue #8 owns the final command and safety checks; issue #4
-must provide the underlying resettable/scoped storage seam.
+```sh
+kintsugi-registry-admin scope dst-cold-warm \
+  --rehearsals-root .kintsugi/rehearsals \
+  --reset
+```
+
+The resolved Registry root is always
+`<rehearsals-root>/<scope>/skills`. Scope names are safe single directory names,
+filesystem-root scopes are rejected, and existing symlinked scope or Skill
+directories are refused. Reset delegates to the Registry's narrow store clear:
+only child folders containing `SKILL.md` are removed. A top-level symlinked
+Skill is unlinked rather than traversed, so reset cannot modify its external
+target. Sibling scopes and the scope's Run artifacts and event logs remain
+untouched.
+
+This capability is deliberately absent from the MCP tools. Ordinary agents need
+read and publish access, not permission to erase shared learning; the rehearsal
+operator resets the scope before starting the first Run. Registry git sync also
+requires the Skill directory itself to be the worktree root. A scope nested
+inside the Kintsugi checkout is therefore a plain store and cannot pull, commit,
+or push through the parent repository.
 
 ## Errors callers must handle
 

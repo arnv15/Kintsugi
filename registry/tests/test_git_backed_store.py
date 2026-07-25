@@ -145,3 +145,31 @@ def test_refreshing_a_plain_directory_is_harmless(registry: SkillRegistry) -> No
     registry.refresh()
 
     assert registry.list_skills()["count"] == 1
+
+
+def test_a_nested_skill_directory_does_not_sync_through_its_parent_repo(
+    clone: Path, remote: Path, tmp_path: Path
+) -> None:
+    (clone / "README.md").write_text("Parent repository\n", encoding="utf-8")
+    git("add", "README.md", cwd=clone)
+    git(
+        "-c",
+        "user.name=Test",
+        "-c",
+        "user.email=test@example.com",
+        "commit",
+        "-m",
+        "Seed parent",
+        cwd=clone,
+    )
+    git("push", cwd=clone)
+    parent_head = git("rev-parse", "HEAD", cwd=clone)
+    nested_skills = clone / ".kintsugi" / "rehearsals" / "dst-pair" / "skills"
+    nested_skills.mkdir(parents=True)
+    registry = SkillRegistry(skills_dir=nested_skills)
+
+    result = registry.publish_skill(**MUTABLE_DEFAULT_SKILL)
+
+    assert result["sync"]["pushed"] is False
+    assert git("rev-parse", "HEAD", cwd=clone) == parent_head
+    assert files_on_the_remote(remote, tmp_path) == ["README.md"]
