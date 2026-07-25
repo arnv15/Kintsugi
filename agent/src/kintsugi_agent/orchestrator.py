@@ -37,6 +37,7 @@ class RunSpec:
     test_command: tuple[str, ...]
     max_turns: int = 40
     max_budget_usd: float | None = None
+    model: str | None = None
 
 
 @dataclass(frozen=True)
@@ -105,6 +106,7 @@ class AgentRuntime:
             registry_env=self.registry_env,
             max_turns=spec.max_turns,
             max_budget_usd=spec.max_budget_usd,
+            model=spec.model,
         )
         prompt = build_run_prompt(spec)
         started = self.clock()

@@ -74,3 +74,31 @@ Skill to a new local Registry. It then fixes the paired `reports` bug in another
 baseline worktree and fails unless that Run reuses the published Skill, reads
 zero web sources, and passes. Artifacts are retained under
 `.kintsugi/live-pairs/<pair-id>/`; use `--pair-id` to name a rehearsal.
+
+## Capture the paid six-Run demo
+
+Issue #7 has a separate opt-in command that pins the model, requires an explicit
+per-Run API budget, creates a new local Registry, and executes the Seeded Bugs
+sequentially in the exact order A1 → A2 → B1 → B2 → C1 → C2:
+
+```bash
+agent/.venv/bin/kintsugi-agent-live-demo \
+  --capture-id issue-7 \
+  --model claude-sonnet-4-6 \
+  --max-turns 40 \
+  --max-budget-usd 2.00
+```
+
+The command refuses to reuse any existing capture output. It retains six fresh
+baseline worktrees under `.kintsugi/live-demos/issue-7/runs/`, writes the real
+append-only log to `demo/issue-7/events.jsonl`, stores the three published
+Skills under `demo/issue-7/skills/`, and fails unless every pair proves lower
+tokens, lower wall-clock time, and zero sources read on the Reuse Path.
+
+Point the unchanged event server and dashboard at that capture with:
+
+```bash
+EVENTS_PATH="$PWD/demo/issue-7/events.jsonl" \
+SKILLS_PATH="$PWD/demo/issue-7/skills" \
+npm start
+```
