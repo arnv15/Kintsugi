@@ -1,8 +1,8 @@
 # Skill Registry
 
-**Status: Planned.** Specified by issue
-[#4](https://github.com/arnv15/Kintsugi/issues/4) and ADRs 0001–0003; no Registry
-implementation exists on `main` yet.
+**Status: Current.** Implemented for issue
+[#4](https://github.com/arnv15/Kintsugi/issues/4) under `registry/`, following
+ADRs 0001–0003.
 
 The Skill Registry is the shared store of portable Skills. It is a standalone
 MCP server so any MCP-capable agent can reuse Kintsugi's learning without
@@ -21,7 +21,7 @@ the Registry, and receives an independently computed next step:
 The Registry, rather than the agent, owns this decision so the event log records
 an externally produced fact instead of the agent's self-assessment.
 
-## Planned MCP tool interface
+## MCP tool interface
 
 The exact transport schema will be implemented and tested in issue #4. The
 accepted logical inputs and outputs are:
@@ -155,7 +155,7 @@ test cases rather than being presented as stronger guarantees than they are.
 
 ## Filesystem storage and agent relationship
 
-Planned authoritative layout:
+Authoritative layout:
 
 ```text
 <registry-root>/

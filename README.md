@@ -28,3 +28,12 @@ Set `EVENTS_PATH`, `SKILLS_PATH`, `HOST`, or `PORT` to read a different log or
 Skill directory or to change the listening address. The server reads the files
 on every request and does not calculate derived metrics; all joins and
 comparisons stay in the dashboard.
+
+## Agent runtime
+
+The `agent/` package runs one Seeded Bug in a fresh detached worktree from the
+`baseline` tag. It uses the pinned Claude Agent SDK, connects to the Skill
+Registry over MCP, enforces test and citation policy with hooks, restores tests
+before verification, and appends the real Run to `events.jsonl`.
+
+See [`agent/README.md`](agent/README.md) for the command and configuration.

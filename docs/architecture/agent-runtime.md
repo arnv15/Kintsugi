@@ -1,8 +1,8 @@
 # Agent runtime
 
-**Status: Planned.** Specified by issue
-[#6](https://github.com/arnv15/Kintsugi/issues/6) and ADRs 0005, 0007–0011, and
-0013; no Agent SDK runtime exists on `main` yet.
+**Status: Current.** Implemented for issue
+[#6](https://github.com/arnv15/Kintsugi/issues/6) under `agent/`, following
+ADRs 0005, 0007–0011, and 0013.
 
 The agent runtime will coordinate one complete Run: isolate a Seeded Bug,
 diagnose its Root Cause Class, obtain a cited strategy through research or
@@ -17,17 +17,30 @@ model cannot edit tests, cannot edit source before recording a diagnosis and
 cited strategy, cannot reuse a dirty worktree, and cannot publish a Skill for a
 failed fix.
 
-## Planned dependencies
+## Current dependencies
 
 | Dependency | Status | Runtime use |
 | --- | --- | --- |
 | Event schema and append-only log from #2 | Current | Record every meaningful fact |
 | `baseline` sandbox and Seeded Bugs from #3 | Current | Create an uncontaminated Run worktree |
-| Skill Registry from #4 | Planned | Search, retrieve, and publish Skills over MCP |
-| Claude Agent SDK | Planned integration | Built-in code, shell, web, Skill, MCP, and hook capabilities |
+| Skill Registry from #4 | Current | Search, retrieve, and publish Skills over MCP |
+| `claude-agent-sdk==0.2.123` | Pinned in `agent/uv.lock` | Built-in code, shell, web, Skill, MCP, and hook capabilities |
 
-The runtime must pin and verify the SDK version. ADR-0008 notes that the exact
-token/cost fields available from the SDK still need an hour-zero check.
+The SDK's final `ResultMessage` supplies `usage`, `total_cost_usd`, and duration
+facts. The runtime records the token fields and cost directly; it does not
+derive comparisons.
+
+## Current files
+
+| Path | Responsibility |
+| --- | --- |
+| [`agent/src/kintsugi_agent/orchestrator.py`](../../agent/src/kintsugi_agent/orchestrator.py) | Creates one Run and closes its event stream |
+| [`agent/src/kintsugi_agent/runner.py`](../../agent/src/kintsugi_agent/runner.py) | Builds the pinned SDK options, hooks, MCP connections, and prompt |
+| [`agent/src/kintsugi_agent/hooks.py`](../../agent/src/kintsugi_agent/hooks.py) | Enforces edit, research/reuse, verification, and publish policy |
+| [`agent/src/kintsugi_agent/runtime_tools.py`](../../agent/src/kintsugi_agent/runtime_tools.py) | Exposes hypothesis, strategy, Skill installation, and verification tools |
+| [`agent/src/kintsugi_agent/verification.py`](../../agent/src/kintsugi_agent/verification.py) | Restores committed tests and enforces two attempts |
+| [`agent/src/kintsugi_agent/worktrees.py`](../../agent/src/kintsugi_agent/worktrees.py) | Creates detached worktrees from `baseline` |
+| [`agent/src/kintsugi_agent/events.py`](../../agent/src/kintsugi_agent/events.py) | Validates and appends the JSONL contract |
 
 ## One Run, end to end
 
@@ -71,7 +84,7 @@ synthesis, not diagnosis or testing.
 
 ## Agent SDK interface
 
-The accepted design uses the Claude Agent SDK because it already supplies:
+The implementation uses the Claude Agent SDK because it supplies:
 
 - `Read`, `Write`, `Edit`, `Bash`, `Glob`, and `Grep` for repository work;
 - `WebSearch` and `WebFetch` for the Research Path;
@@ -202,3 +215,15 @@ Automated tests should invoke hook callbacks with constructed tool-call payloads
 and event history, then assert on permission decisions and appended facts. A
 full live agent Run costs network time and model tokens, so it belongs in dry-run
 and demo verification rather than the fast unit suite.
+
+The package also tests the exported Run boundary for fresh worktree commands,
+test restoration, two-attempt stopping, SDK configuration, metrics, Skill
+installation, event validation, and publish-only-after-green.
+
+## Operator interface
+
+`kintsugi-agent` takes one Run ID, Seeded Bug ID, Root Cause Class metadata, test
+directory, and verification command. It retains the worktree under
+`.kintsugi/runs/` and appends to `events.jsonl`; both paths can be overridden.
+The complete command and Registry configuration are documented in
+[`agent/README.md`](../../agent/README.md).

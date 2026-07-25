@@ -109,9 +109,9 @@ They do not need access to agent internals, Registry matching, or filesystem
 layout beyond server configuration. That seam lets fixture data be replaced by
 real Run data without changing dashboard logic.
 
-## Planned integration
+## Runtime integration
 
-When issues #4 and #6 are implemented:
+With issues #4 and #6 implemented:
 
 1. `EVENTS_PATH` points at the agent's real append-only log.
 2. `SKILLS_PATH` points at the Registry's authoritative Skill directory.

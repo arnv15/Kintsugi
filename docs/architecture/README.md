@@ -10,10 +10,10 @@ module pages explain the implementation details.
 
 ## Status at a glance
 
-- **Current:** the Seeded Bug sandbox, event fixture/server, and dashboard are
-  implemented on `main`.
-- **Planned:** the MCP Skill Registry, agent runtime, six-Run capture, and
-  rehearsal tooling are specified but not yet implemented.
+- **Current:** the Seeded Bug sandbox, event fixture/server, dashboard, MCP
+  Skill Registry, and agent runtime are implemented on `main`.
+- **Planned:** the six-Run capture and rehearsal tooling are specified but not
+  yet implemented.
 
 ```mermaid
 mindmap
@@ -66,9 +66,9 @@ mindmap
       Seeded Bug sandbox
       Event server
       Dashboard
-    Planned modules
       Agent runtime
       Skill Registry over MCP
+    Planned modules
       Six Run capture
       Rehearsal tooling
     Trust rules
@@ -86,9 +86,9 @@ Solid boxes marked **current** exist in this repository. Boxes marked
 flowchart TD
   operator["Demo operator chooses a Seeded Bug"] --> worktree["Fresh worktree from baseline<br/>current"]
   sandbox["Seeded Bug sandbox<br/>current"] --> worktree
-  worktree --> agent["Agent runtime<br/>planned"]
+  worktree --> agent["Agent runtime<br/>current"]
   agent --> hypothesis["Root Cause Hypothesis"]
-  hypothesis --> registry["Skill Registry over MCP<br/>planned"]
+  hypothesis --> registry["Skill Registry over MCP<br/>current"]
 
   registry -->|decision research| research["Read primary sources"]
   registry -->|decision reuse| retrieved["Retrieve matching SKILL.md"]
@@ -105,7 +105,7 @@ flowchart TD
 
   agent -. "append factual events" .-> log["events.jsonl"]
   finish -. "append outcome and metrics" .-> log
-  registry <--> store["Skill folders containing SKILL.md<br/>planned"]
+  registry <--> store["Skill folders containing SKILL.md<br/>current"]
   store --> eventServer["Read-only event server<br/>current"]
   log --> eventServer
   eventServer --> endpoints["GET /events<br/>GET /skills<br/>GET /runs"]
@@ -130,8 +130,8 @@ The thing being measured therefore does not grade its own work.
 | --- | --- | --- | --- |
 | Event server | Current | Makes the event log and Skills readable over HTTP without calculating conclusions | [Event server](event-server.md) |
 | Dashboard | Current | Turns raw facts into a human-readable activity feed, Skill cards, and pair comparisons | [Dashboard](dashboard.md) |
-| Skill Registry | Planned | Lets any MCP-capable agent find, retrieve, publish, and list portable Skills | [Skill Registry](skill-registry.md) |
-| Agent runtime | Planned | Runs the diagnosis, research/reuse, edit, verification, and event-writing loop | [Agent runtime](agent-runtime.md) |
+| Skill Registry | Current | Lets any MCP-capable agent find, retrieve, publish, and list portable Skills | [Skill Registry](skill-registry.md) |
+| Agent runtime | Current | Runs the diagnosis, research/reuse, edit, verification, and event-writing loop | [Agent runtime](agent-runtime.md) |
 | Seeded Bug sandbox | Current | Supplies six controlled bugs and a clean baseline for fair, isolated Runs | [Sandbox](sandbox.md) |
 
 ## Shared contracts
@@ -175,9 +175,9 @@ agent runtime can load it natively.
 
 ```mermaid
 flowchart LR
-  event["Event server and fixture<br/>#2 complete"] --> runtime["Agent runtime<br/>#6 planned"]
+  event["Event server and fixture<br/>#2 complete"] --> runtime["Agent runtime<br/>#6 complete"]
   sandbox["Sandbox and baseline<br/>#3 complete"] --> runtime
-  registry["Skill Registry<br/>#4 planned"] --> runtime
+  registry["Skill Registry<br/>#4 complete"] --> runtime
   event --> dashboard["Dashboard<br/>#5 implemented"]
   runtime --> capture["Six-Run capture<br/>#7 planned"]
   runtime --> rehearsal["Rehearsal tooling<br/>#8 planned"]

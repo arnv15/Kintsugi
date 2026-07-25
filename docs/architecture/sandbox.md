@@ -88,7 +88,7 @@ main checkout.
 
 ## Runtime relationship
 
-Issue #6 will:
+The issue #6 runtime now:
 
 1. create a new worktree from `baseline` for each Run;
 2. install any retrieved Skill only inside that worktree;
