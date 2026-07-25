@@ -23,10 +23,37 @@ During a demo, a viewer should be able to answer:
 
 | File | Responsibility |
 | --- | --- |
-| [`public/index.html`](../../public/index.html) | Semantic dashboard structure and empty containers |
-| [`public/dashboard.js`](../../public/dashboard.js) | Polling, projection, joins, comparison model, and DOM rendering |
+| [`public/index.html`](../../public/index.html) | Semantic page structure: explainer, install, and dashboard containers |
+| [`public/dashboard.js`](../../public/dashboard.js) | Polling, projection, joins, comparison model, DOM rendering, scroll-reveal, and copy-to-clipboard |
 | [`public/styles.css`](../../public/styles.css) | Responsive visual presentation |
 | [`test/dashboard.test.js`](../../test/dashboard.test.js) | Model, join, grouping, fallback, and HTTP integration tests |
+
+## Page structure
+
+The page is one scroll, with `<nav>` anchors jumping to each part:
+
+1. **Hero** — the live summary counts (completed Runs, Skills, verified fixes).
+2. **How it works** (`#how-it-works`) — four static cards naming the real
+   flow: diagnose, ask the Registry, reuse or research, verify and publish.
+   Not derived from live data; wording must be kept in sync with
+   [`docs/architecture/skill-registry.md`](skill-registry.md) by hand.
+3. **Install** (`#install`) — the two commands from
+   [`registry/README.md`](../../registry/README.md) (run the Registry over
+   MCP, or clone the Skills as plain files), each with a copy-to-clipboard
+   button. Keep these commands byte-for-byte identical to the README; this
+   page does not re-derive them.
+4. **Dashboard** (`#dashboard`) — the three live sections below, unchanged in
+   behavior: Run comparisons, Portable Skills, Latest activity.
+
+Every `[data-reveal]` element (the step cards, install cards, and dashboard
+intro) fades and slides in once via `IntersectionObserver`
+(`initScrollReveal`), staggered per group. `initScrollReveal` itself only
+special-cases a missing `IntersectionObserver` (reveals everything
+immediately); `prefers-reduced-motion` is handled separately in
+`styles.css`, which forces `[data-reveal]` to its visible state outright, so
+the observer still runs but has nothing left to animate. Copy buttons
+(`initCopyButtons`) write the code block's own `textContent` to the
+clipboard, so the button can never drift from the command it displays.
 
 ## Inputs
 

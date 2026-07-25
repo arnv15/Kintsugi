@@ -389,6 +389,57 @@ function setStatus(kind, message) {
   document.querySelector("#status-text").textContent = message;
 }
 
+function initScrollReveal() {
+  const targets = document.querySelectorAll("[data-reveal]");
+  if (targets.length === 0) {
+    return;
+  }
+
+  if (typeof IntersectionObserver === "undefined") {
+    targets.forEach((target) => target.classList.add("is-visible"));
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      }
+    },
+    { threshold: 0.2 },
+  );
+
+  targets.forEach((target) => observer.observe(target));
+}
+
+function initCopyButtons() {
+  for (const button of document.querySelectorAll("[data-copy-target]")) {
+    button.addEventListener("click", async () => {
+      const source = document.getElementById(button.dataset.copyTarget);
+      if (!source) {
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(source.textContent);
+      } catch {
+        return;
+      }
+
+      const label = button.textContent;
+      button.textContent = "Copied";
+      button.classList.add("is-copied");
+      window.setTimeout(() => {
+        button.textContent = label;
+        button.classList.remove("is-copied");
+      }, 1_600);
+    });
+  }
+}
+
 async function startDashboard() {
   async function refresh() {
     try {
@@ -412,5 +463,7 @@ async function startDashboard() {
 }
 
 if (typeof document !== "undefined") {
+  initScrollReveal();
+  initCopyButtons();
   startDashboard();
 }

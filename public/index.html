@@ -20,6 +20,11 @@
         </svg>
         <span>Kintsugi</span>
       </a>
+      <nav class="site-nav" aria-label="Page sections">
+        <a href="#how-it-works">How it works</a>
+        <a href="#install">Install</a>
+        <a href="#dashboard">Dashboard</a>
+      </nav>
       <div class="live-status" id="live-status" role="status">
         <span class="live-dot" aria-hidden="true"></span>
         <span id="status-text">Connecting to the event log…</span>
@@ -51,6 +56,96 @@
           </div>
         </dl>
       </section>
+
+      <section class="explainer-section" id="how-it-works" aria-labelledby="how-it-works-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-index">How it works</p>
+            <h2 id="how-it-works-title">One fix, mended for reuse</h2>
+          </div>
+          <p>
+            A cracked pot mended with gold seams is stronger at the break.
+            Kintsugi treats a bug the same way: the repair itself becomes the
+            valuable part.
+          </p>
+        </div>
+        <ol class="step-grid">
+          <li class="step-card" data-reveal>
+            <span class="step-mark">01</span>
+            <h3>Diagnose</h3>
+            <p>
+              A Run begins with one sentence: the Root Cause Hypothesis — the
+              kind of mistake this looks like, never where it happens or how
+              it surfaces.
+            </p>
+          </li>
+          <li class="step-card" data-reveal>
+            <span class="step-mark">02</span>
+            <h3>Ask the Registry</h3>
+            <p>
+              That hypothesis goes to the shared Skill Registry. The Registry,
+              not the agent, decides the next step: reuse or research.
+            </p>
+          </li>
+          <li class="step-card" data-reveal>
+            <span class="step-mark">03</span>
+            <h3>Reuse or research</h3>
+            <p>
+              A match installs the winning Skill's strategy outright. No match
+              means reading primary sources and building a fix from scratch.
+            </p>
+          </li>
+          <li class="step-card" data-reveal>
+            <span class="step-mark">04</span>
+            <h3>Verify, then publish</h3>
+            <p>
+              A fix only counts once its tests pass. A verified Research Path
+              fix becomes a new Skill, pushed for the next agent to reuse.
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="install-section" id="install" aria-labelledby="install-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-index">Install</p>
+            <h2 id="install-title">Join the shared Registry</h2>
+          </div>
+          <p>
+            The Registry is a standalone MCP server. Point any Claude Code or
+            Agent SDK client at it, or skip the server entirely and install
+            the Skills as plain files.
+          </p>
+        </div>
+        <div class="install-grid">
+          <div class="install-card" data-reveal>
+            <p class="install-label">Run the Registry over MCP</p>
+            <pre class="code-block"><code id="install-command-registry">KINTSUGI_SKILLS_REMOTE=https://github.com/arnv15/kintsugi-skills.git \
+  uvx --from "git+https://github.com/arnv15/Kintsugi#subdirectory=registry" kintsugi-registry</code></pre>
+            <button type="button" class="copy-button" data-copy-target="install-command-registry">
+              Copy
+            </button>
+          </div>
+          <div class="install-card" data-reveal>
+            <p class="install-label">Or install Skills as plain files</p>
+            <pre class="code-block"><code id="install-command-clone">git clone https://github.com/arnv15/kintsugi-skills .claude/skills/kintsugi</code></pre>
+            <button type="button" class="copy-button" data-copy-target="install-command-clone">
+              Copy
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div class="dashboard-intro" id="dashboard" data-reveal>
+        <p class="section-index">Dashboard</p>
+        <h2>Live evidence from the event log</h2>
+        <p>
+          Everything below is read straight from <code>/events</code>,
+          <code>/skills</code>, and <code>/runs</code> — nothing here is a
+          precomputed conclusion.
+        </p>
+      </div>
 
       <section class="dashboard-section comparisons-section" aria-labelledby="comparisons-title">
         <div class="section-heading">
