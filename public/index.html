@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Live evidence that Kintsugi fixes bugs and reuses what it learns."
+    >
+    <title>Kintsugi · Run evidence</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script type="module" src="/dashboard.js"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Kintsugi dashboard home">
+        <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
+          <path d="M6 5h28v30H6z"></path>
+          <path class="brand-seam" d="M6 15h10l5-6 4 13 9 3"></path>
+        </svg>
+        <span>Kintsugi</span>
+      </a>
+      <div class="live-status" id="live-status" role="status">
+        <span class="live-dot" aria-hidden="true"></span>
+        <span id="status-text">Connecting to the event log…</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Live evidence, not promises</p>
+          <h1 id="hero-title">Fix once.<br><em>Reuse what worked.</em></h1>
+          <p class="hero-lede">
+            Every Run leaves a trace. See Kintsugi diagnose a Root Cause Class,
+            verify a fix, and turn the learning into a portable Skill.
+          </p>
+        </div>
+        <dl class="summary" aria-label="Dashboard summary">
+          <div>
+            <dt>Completed Runs</dt>
+            <dd id="run-count">—</dd>
+          </div>
+          <div>
+            <dt>Portable Skills</dt>
+            <dd id="skill-count">—</dd>
+          </div>
+          <div>
+            <dt>Verified fixes</dt>
+            <dd id="success-rate">—</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="dashboard-section comparisons-section" aria-labelledby="comparisons-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-index">01 · Evidence</p>
+            <h2 id="comparisons-title">Run comparisons</h2>
+          </div>
+          <p>
+            Research and Reuse Paths are compared only within the same Root
+            Cause Class, where the work is genuinely comparable.
+          </p>
+        </div>
+        <div class="comparison-grid" id="comparisons" aria-live="polite">
+          <p class="loading-copy">Loading Run evidence…</p>
+        </div>
+      </section>
+
+      <section class="dashboard-section" aria-labelledby="skills-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-index">02 · Memory</p>
+            <h2 id="skills-title">Portable Skills</h2>
+          </div>
+          <p>
+            Each Skill captures one Root Cause Class, its verified strategy, and
+            the primary sources that support it.
+          </p>
+        </div>
+        <div class="skill-grid" id="skills" aria-live="polite">
+          <p class="loading-copy">Loading Skills…</p>
+        </div>
+      </section>
+
+      <section class="dashboard-section activity-section" aria-labelledby="activity-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-index">03 · Trace</p>
+            <h2 id="activity-title">Latest activity</h2>
+          </div>
+          <p>
+            A plain-language view of every append-only event, in the exact order
+            it was recorded.
+          </p>
+        </div>
+        <ol class="activity-feed" id="activity" aria-live="polite">
+          <li class="loading-copy">Loading event history…</li>
+        </ol>
+      </section>
+    </main>
+
+    <footer>
+      <p>Kintsugi · One fix becomes shared knowledge.</p>
+      <p id="last-updated">Waiting for the first update</p>
+    </footer>
+  </body>
+</html>
