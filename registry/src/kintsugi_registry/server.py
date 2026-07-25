@@ -8,13 +8,15 @@ within (a hypothesis and nothing else; the decision is the Registry's).
 
 from __future__ import annotations
 
+import sys
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
-from .config import resolve_skills_dir
+from .config import resolve_skills_dir, resolve_skills_remote
 from .hypothesis import EXAMPLE_HYPOTHESIS
 from .registry import SkillRegistry
+from .sync import ensure_clone
 
 # Carried as data rather than as a docstring so the worked example stays the one
 # the refusal message hands back — a caller shown one sentence and corrected
@@ -121,8 +123,18 @@ def build_server(registry: SkillRegistry) -> FastMCP:
 
 
 def main() -> None:
-    """Run the Registry over stdio, the transport an agent's MCP client speaks."""
-    build_server(SkillRegistry(skills_dir=resolve_skills_dir())).run()
+    """Run the Registry over stdio, the transport an agent's MCP client speaks.
+
+    Progress goes to stderr, never stdout: on stdio transport, stdout carries
+    the MCP frames and a stray `print` would corrupt the protocol.
+    """
+    skills_dir = resolve_skills_dir()
+    print(ensure_clone(skills_dir, resolve_skills_remote()), file=sys.stderr)
+
+    registry = SkillRegistry(skills_dir=skills_dir)
+    print(registry.refresh()["detail"], file=sys.stderr)
+
+    build_server(registry).run()
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -10,12 +10,48 @@ document the Registry serves is the same document an agent installs (ADR-0002).
 uv run --directory registry kintsugi-registry
 ```
 
-It speaks MCP over stdio. Two environment variables configure it:
+It speaks MCP over stdio. Three environment variables configure it:
 
 | Variable | Meaning |
 | --- | --- |
 | `KINTSUGI_SKILLS_DIR` | Where Skills are stored. Defaults to `~/.kintsugi/skills` — a user-level path, not a repo-level one, because the Registry is shared across repos and machines. |
+| `KINTSUGI_SKILLS_REMOTE` | The shared Skills repo. If the Skill directory doesn't exist yet, the first run clones this into it. |
 | `KINTSUGI_SANDBOX_REPO` | The repo Skills are being learned in. Set it and the repo-leak guard runs on every publish, whether or not the caller passes `repo_path`. |
+
+## The shared Skills repo
+
+Skills live in [arnv15/kintsugi-skills](https://github.com/arnv15/kintsugi-skills)
+— one `<skill-id>/SKILL.md` folder per Root Cause Class. When the Skill
+directory is a git working tree with a remote, the Registry keeps it in step:
+it pulls on startup, and each published Skill is committed and pushed with the
+publishing agent as the commit author, so `git log` is the provenance record.
+
+A failed push never costs the Skill. It is written to disk first, and the
+publish result reports `sync: {"pushed": false, "detail": "..."}` so the push
+can be retried by hand. Refreshing happens on startup rather than per search,
+because ADR-0006 reports wall-clock per Run and a network round trip inside
+`search_skills` would land inside the number being measured.
+
+A plain, non-git directory keeps working exactly as before.
+
+### Consuming it from another machine
+
+You do not need this server to use the Skills. A Skill is a Claude Code
+`SKILL.md`, so the repo is directly installable:
+
+```bash
+git clone https://github.com/arnv15/kintsugi-skills .claude/skills/kintsugi
+```
+
+Run the Registry when you want the part a folder cannot give you — the
+`reuse`/`research` decision, and the two guards:
+
+```bash
+KINTSUGI_SKILLS_REMOTE=https://github.com/arnv15/kintsugi-skills.git \
+  uvx --from "git+https://github.com/arnv15/Kintsugi#subdirectory=registry" kintsugi-registry
+```
+
+Publishing needs push access to the Skills repo; reading does not.
 
 To register it with a Claude Agent SDK client or a Claude Code instance:
 

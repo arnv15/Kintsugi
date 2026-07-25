@@ -17,6 +17,7 @@ from .leakcheck import Leak, find_leaks
 from .matching import DEFAULT_THRESHOLD, rank_skills
 from .skill import Skill, slugify
 from .store import SkillStore
+from .sync import build_sync
 
 UNKNOWN_PUBLISHER = "unknown"
 
@@ -36,6 +37,17 @@ class SkillRegistry:
     def __init__(self, skills_dir: Path, threshold: float = DEFAULT_THRESHOLD) -> None:
         self.store = SkillStore(Path(skills_dir))
         self.threshold = threshold
+        self.sync = build_sync(self.store.root)
+
+    def refresh(self) -> dict[str, Any]:
+        """Bring the Skill directory up to date with the shared repo.
+
+        Called when the server starts rather than on every search: ADR-0006
+        reports wall-clock per Run, and a network round trip inside
+        `search_skills` would land inside the number being measured.
+        """
+        outcome = self.sync.refresh()
+        return {"detail": outcome.detail}
 
     def clear(self) -> list[str]:
         """Remove every Skill, returning the ids removed.
@@ -136,12 +148,16 @@ class SkillRegistry:
 
         replaced = self.store.exists(skill.id)
         self.store.save(skill)
+        # Sync only after the Skill is safely on disk, so a failure to reach the
+        # shared repo costs the push and never the Skill itself.
+        pushed = self.sync.record(skill.id, skill.published_by)
         return {
             "published": True,
             "skill_id": skill.id,
             "replaced": replaced,
             "leak_check": "passed" if repo else "skipped",
             "warnings": _warnings(skill.aliases, skill.sources, skill.published_by),
+            "sync": {"pushed": pushed.pushed, "detail": pushed.detail},
         }
 
     def _find_leaks(self, body: str, repo: Path | None) -> list[Leak]:

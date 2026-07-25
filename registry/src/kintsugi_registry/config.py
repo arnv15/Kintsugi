@@ -14,6 +14,7 @@ SKILLS_DIR_ENV_VAR = "KINTSUGI_SKILLS_DIR"
 DEFAULT_SKILLS_DIR = Path.home() / ".kintsugi" / "skills"
 
 SANDBOX_REPO_ENV_VAR = "KINTSUGI_SANDBOX_REPO"
+SKILLS_REMOTE_ENV_VAR = "KINTSUGI_SKILLS_REMOTE"
 
 
 def resolve_skills_dir(explicit: str | Path | None = None) -> Path:
@@ -26,6 +27,11 @@ def resolve_skills_dir(explicit: str | Path | None = None) -> Path:
         return Path(from_env).expanduser()
 
     return DEFAULT_SKILLS_DIR
+
+
+def resolve_skills_remote() -> str | None:
+    """The shared Skills repo to clone from, if one is configured."""
+    return os.environ.get(SKILLS_REMOTE_ENV_VAR) or None
 
 
 def resolve_sandbox_repo(explicit: str | Path | None = None) -> Path | None:
