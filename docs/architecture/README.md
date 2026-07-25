@@ -11,9 +11,10 @@ module pages explain the implementation details.
 ## Status at a glance
 
 - **Current:** the Seeded Bug sandbox, event fixture/server, dashboard, MCP
-  Skill Registry, and agent runtime are implemented on `main`.
-- **Planned:** the six-Run capture and rehearsal tooling are specified but not
-  yet implemented.
+  Skill Registry, agent runtime, and guarded six-Run capture command are
+  implemented.
+- **Pending evidence:** the paid six-Run command still needs to produce and
+  validate the real issue #7 capture before that ticket can close.
 
 ```mermaid
 mindmap
@@ -68,8 +69,9 @@ mindmap
       Dashboard
       Agent runtime
       Skill Registry over MCP
-    Planned modules
-      Six Run capture
+      Six Run capture driver
+    Pending artifacts
+      Real six Run event log
       Rehearsal tooling
     Trust rules
       Citations before code changes
@@ -84,7 +86,8 @@ Solid boxes marked **current** exist in this repository. Boxes marked
 
 ```mermaid
 flowchart TD
-  operator["Demo operator chooses a Seeded Bug"] --> worktree["Fresh worktree from baseline<br/>current"]
+  operator["Demo operator confirms model budget"] --> capture["Six-Run capture driver<br/>current"]
+  capture --> worktree["Fresh worktree from baseline<br/>current"]
   sandbox["Seeded Bug sandbox<br/>current"] --> worktree
   worktree --> agent["Agent runtime<br/>current"]
   agent --> hypothesis["Root Cause Hypothesis"]
@@ -105,6 +108,7 @@ flowchart TD
 
   agent -. "append factual events" .-> log["events.jsonl"]
   finish -. "append outcome and metrics" .-> log
+  log --> validate["Strict six-Run acceptance validator<br/>current"]
   registry <--> store["Skill folders containing SKILL.md<br/>current"]
   store --> eventServer["Read-only event server<br/>current"]
   log --> eventServer
@@ -179,7 +183,8 @@ flowchart LR
   sandbox["Sandbox and baseline<br/>#3 complete"] --> runtime
   registry["Skill Registry<br/>#4 complete"] --> runtime
   event --> dashboard["Dashboard<br/>#5 implemented"]
-  runtime --> capture["Six-Run capture<br/>#7 planned"]
+  runtime --> capture["Six-Run capture driver<br/>#7 implemented"]
+  capture --> evidence["Real paid capture<br/>#7 pending"]
   runtime --> rehearsal["Rehearsal tooling<br/>#8 planned"]
 ```
 
