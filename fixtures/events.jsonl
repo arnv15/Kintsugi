@@ -1,0 +1,18 @@
+{"ts":"2026-07-25T16:00:00.000Z","run_id":"research-mutable-default","seq":1,"type":"run_started","bug_id":"inventory-history","root_cause_class":"mutable default argument"}
+{"ts":"2026-07-25T16:00:08.000Z","run_id":"research-mutable-default","seq":2,"type":"hypothesis_formed","text":"A mutable default argument is shared across calls and leaks state between otherwise independent results."}
+{"ts":"2026-07-25T16:00:12.000Z","run_id":"research-mutable-default","seq":3,"type":"registry_queried","decision":"research","top_score":0.31,"skill_id":null}
+{"ts":"2026-07-25T16:00:29.000Z","run_id":"research-mutable-default","seq":4,"type":"source_read","url":"https://docs.python.org/3/tutorial/controlflow.html#default-argument-values","title":"Python tutorial: Default Argument Values"}
+{"ts":"2026-07-25T16:00:47.000Z","run_id":"research-mutable-default","seq":5,"type":"source_read","url":"https://docs.python.org/3/reference/compound_stmts.html#function-definitions","title":"Python language reference: Function definitions"}
+{"ts":"2026-07-25T16:01:02.000Z","run_id":"research-mutable-default","seq":6,"type":"strategy_recorded","text":"Use an immutable sentinel as the default and allocate a fresh collection inside the function for each omitted argument.","sources":["https://docs.python.org/3/tutorial/controlflow.html#default-argument-values","https://docs.python.org/3/reference/compound_stmts.html#function-definitions"]}
+{"ts":"2026-07-25T16:01:18.000Z","run_id":"research-mutable-default","seq":7,"type":"patch_applied","files_touched":["inventory/history.py"]}
+{"ts":"2026-07-25T16:01:31.000Z","run_id":"research-mutable-default","seq":8,"type":"tests_run","passed":18,"failed":0,"output_tail":"18 passed in 0.42s"}
+{"ts":"2026-07-25T16:01:43.000Z","run_id":"research-mutable-default","seq":9,"type":"skill_published","skill_id":"mutable-defaults","name":"Repair Mutable Defaults"}
+{"ts":"2026-07-25T16:01:45.000Z","run_id":"research-mutable-default","seq":10,"type":"run_finished","outcome":"passed","tokens":38420,"cost_usd":0.461,"seconds":105,"sources_count":2}
+{"ts":"2026-07-25T16:05:00.000Z","run_id":"reuse-mutable-default","seq":1,"type":"run_started","bug_id":"report-buckets","root_cause_class":"mutable default argument"}
+{"ts":"2026-07-25T16:05:06.000Z","run_id":"reuse-mutable-default","seq":2,"type":"hypothesis_formed","text":"A mutable default argument is shared across calls and causes one report's buckets to appear in another."}
+{"ts":"2026-07-25T16:05:09.000Z","run_id":"reuse-mutable-default","seq":3,"type":"registry_queried","decision":"reuse","top_score":0.96,"skill_id":"mutable-defaults"}
+{"ts":"2026-07-25T16:05:13.000Z","run_id":"reuse-mutable-default","seq":4,"type":"strategy_recorded","text":"Use an immutable sentinel as the default and allocate a fresh collection inside the function for each omitted argument.","sources":["https://docs.python.org/3/tutorial/controlflow.html#default-argument-values","https://docs.python.org/3/reference/compound_stmts.html#function-definitions"]}
+{"ts":"2026-07-25T16:05:14.000Z","run_id":"reuse-mutable-default","seq":5,"type":"skill_reused","skill_id":"mutable-defaults","name":"Repair Mutable Defaults"}
+{"ts":"2026-07-25T16:05:24.000Z","run_id":"reuse-mutable-default","seq":6,"type":"patch_applied","files_touched":["reports/grouping.py"]}
+{"ts":"2026-07-25T16:05:34.000Z","run_id":"reuse-mutable-default","seq":7,"type":"tests_run","passed":22,"failed":0,"output_tail":"22 passed in 0.37s"}
+{"ts":"2026-07-25T16:05:36.000Z","run_id":"reuse-mutable-default","seq":8,"type":"run_finished","outcome":"passed","tokens":8420,"cost_usd":0.101,"seconds":36,"sources_count":0}
