@@ -170,8 +170,8 @@ BUGS = (
         ),
         replacements=(
             (
-                "    asyncio.create_task(persist_all())",
-                "    await persist_all()",
+                "        sink.write(chunk)",
+                "        await sink.write(chunk)",
             ),
         ),
     ),
@@ -251,6 +251,33 @@ def function_signature(source: Path, function_name: str) -> str:
     return repr((annotations, return_annotation))
 
 
+def test_assertion_shape(source: Path, test_name: str) -> tuple[str, ...]:
+    method_name = test_name.split(".")[-1]
+    tree = ast.parse(source.read_text())
+    methods = (
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        and node.name == method_name
+    )
+    method = next(methods, None)
+    if method is None:
+        raise AssertionError(f"{test_name} is missing from {source}")
+
+    assertions = sorted(
+        {
+            node.func.attr
+            for node in ast.walk(method)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr.startswith("assert")
+        }
+    )
+    if not assertions:
+        raise AssertionError(f"{test_name} contains no unittest assertion")
+    return tuple(assertions)
+
+
 def verify_baseline_tag() -> None:
     baseline_commit = run("git", "rev-parse", f"{BASELINE}^{{commit}}").stdout.strip()
     tag_names = run("git", "tag", "--points-at", baseline_commit).stdout.splitlines()
@@ -320,13 +347,22 @@ def verify_pair_distinctness() -> None:
             if first_signature == second_signature:
                 raise AssertionError(f"{root_cause_class} reuses a function signature")
 
+            first_test_shape = test_assertion_shape(
+                worktree / first.test_file, first.test_name
+            )
+            second_test_shape = test_assertion_shape(
+                worktree / second.test_file, second.test_name
+            )
+            if first_test_shape == second_test_shape:
+                raise AssertionError(f"{root_cause_class} reuses a test shape")
+
             for bug in pair:
                 test_source = (worktree / bug.test_file).read_text()
                 if bug.test_name.split(".")[-1] not in test_source:
                     raise AssertionError(f"{bug.test_name} is missing from its test file")
             print(
                 f"PASS distinctness: {root_cause_class} uses different files, "
-                "functions, signatures, and test wording"
+                "functions, signatures, test wording, and assertion shapes"
             )
 
 

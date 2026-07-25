@@ -3,6 +3,10 @@
 This package contains six deliberately incorrect Python functions: two Seeded
 Bugs for each Root Cause Class selected in ADR-0004.
 
+The paired mistakes and their shared fix strategies are documented in
+[`ROOT_CAUSE_CLASSES.md`](ROOT_CAUSE_CLASSES.md). The implementations deliberately
+use different surface types and symptoms within each pair.
+
 The `baseline` tag is the immutable starting point for every Run. Create a fresh
 worktree from that tag before attempting one bug, as required by ADR-0011:
 

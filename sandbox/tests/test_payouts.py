@@ -13,7 +13,7 @@ class PayoutAllocationTests(unittest.TestCase):
 
         allocations = split_evenly(instruction)
 
-        self.assertEqual(Decimal("100.00"), sum(allocations.values()))
+        self.assertAlmostEqual(Decimal("100.00"), sum(allocations.values()), places=2)
 
 
 if __name__ == "__main__":

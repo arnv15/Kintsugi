@@ -1,5 +1,6 @@
 import asyncio
 import unittest
+import warnings
 
 from sandbox.writer import WriteBatch, flush
 
@@ -18,7 +19,9 @@ class BufferedWriteTests(unittest.TestCase):
         sink = MemorySink()
         batch = WriteBatch(chunks=(b"header", b"body"))
 
-        written_count = asyncio.run(flush(batch, sink))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            written_count = asyncio.run(flush(batch, sink))
 
         self.assertEqual(2, written_count)
         self.assertEqual([b"header", b"body"], sink.received)

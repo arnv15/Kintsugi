@@ -1,6 +1,5 @@
 """Buffered asynchronous writes."""
 
-import asyncio
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -16,8 +15,6 @@ class WriteBatch:
 
 async def flush(batch: WriteBatch, sink: ByteSink) -> int:
     """Persist every buffered chunk before reporting completion."""
-    async def persist_all() -> None:
-        await asyncio.gather(*(sink.write(chunk) for chunk in batch.chunks))
-
-    asyncio.create_task(persist_all())
+    for chunk in batch.chunks:
+        sink.write(chunk)
     return len(batch.chunks)
