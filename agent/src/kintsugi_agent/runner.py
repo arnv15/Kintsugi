@@ -76,6 +76,7 @@ def build_agent_options(
     registry_env: dict[str, str] | None = None,
     max_turns: int = 40,
     max_budget_usd: float | None = None,
+    model: str | None = None,
 ) -> ClaudeAgentOptions:
     """Build the fully isolated, non-interactive SDK configuration."""
     if not registry_command:
@@ -128,6 +129,7 @@ def build_agent_options(
         },
         max_turns=max_turns,
         max_budget_usd=max_budget_usd,
+        model=model,
         sandbox={
             "enabled": True,
             "autoAllowBashIfSandboxed": True,

@@ -10,6 +10,7 @@ dependencies = [
 [project.scripts]
 kintsugi-agent = "kintsugi_agent.cli:main"
 kintsugi-agent-live-pair = "kintsugi_agent.live_pair_cli:main"
+kintsugi-agent-live-demo = "kintsugi_agent.live_demo_cli:main"
 
 [dependency-groups]
 dev = [

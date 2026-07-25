@@ -1,8 +1,10 @@
 # Agent runtime
 
-**Status: Current.** Implemented for issue
-[#6](https://github.com/arnv15/Kintsugi/issues/6) under `agent/`, following
-ADRs 0005, 0007–0011, and 0013.
+**Status: Current.** The single-Run runtime was implemented for issue
+[#6](https://github.com/arnv15/Kintsugi/issues/6); issue
+[#7](https://github.com/arnv15/Kintsugi/issues/7) adds the guarded sequential
+six-Run capture command and strict acceptance validator. The real paid capture
+remains pending.
 
 The agent runtime will coordinate one complete Run: isolate a Seeded Bug,
 diagnose its Root Cause Class, obtain a cited strategy through research or
@@ -43,6 +45,8 @@ Run records `null` rather than inventing zero usage.
 | [`agent/src/kintsugi_agent/worktrees.py`](../../agent/src/kintsugi_agent/worktrees.py) | Creates detached worktrees from `baseline` |
 | [`agent/src/kintsugi_agent/events.py`](../../agent/src/kintsugi_agent/events.py) | Validates and appends the JSONL contract |
 | [`agent/src/kintsugi_agent/live_pair_cli.py`](../../agent/src/kintsugi_agent/live_pair_cli.py) | Drives and validates the paid Research-to-Reuse acceptance pair |
+| [`agent/src/kintsugi_agent/live_demo.py`](../../agent/src/kintsugi_agent/live_demo.py) | Defines the immutable six-Run plan and validates all issue #7 comparisons |
+| [`agent/src/kintsugi_agent/live_demo_cli.py`](../../agent/src/kintsugi_agent/live_demo_cli.py) | Executes the paid A1 → A2 → B1 → B2 → C1 → C2 capture |
 
 ## One Run, end to end
 
@@ -83,6 +87,37 @@ flowchart TD
 There are at most two fix attempts. Research and reuse still share the same
 edit and verification gates; reuse saves primary-source reading and strategy
 synthesis, not diagnosis or testing.
+
+## Six-Run capture
+
+The issue #7 command is deliberately separate from the one-Run interface. It
+requires an explicit per-Run budget, pins the selected model into every
+`ClaudeAgentOptions`, scopes a new local Skill Registry, refuses existing
+outputs, and invokes the same `AgentRuntime.execute` boundary six times
+sequentially.
+
+```mermaid
+flowchart LR
+  confirm["Operator confirms model and budget"] --> A1["A1 scheduling"]
+  A1 --> A2["A2 reports"]
+  A2 --> B1["B1 checkout"]
+  B1 --> B2["B2 payouts"]
+  B2 --> C1["C1 fetcher"]
+  C1 --> C2["C2 writer"]
+  C2 --> validate["Validate exact order, paths, outcomes,<br/>tokens, seconds, and zero-source reuse"]
+  validate --> artifacts["Retain events.jsonl, Skills,<br/>and six worktrees"]
+```
+
+Each arrow is a process-order dependency, not shared worktree state. The local
+Registry persists only the portable Skills published by the three Research
+Runs; every Seeded Bug still receives a distinct detached worktree from
+`baseline`.
+
+Validation reads the factual event stream after all six Runs. It requires one
+passing Research-to-Reuse history per Root Cause Class, the same Skill to be
+published then reused, zero `source_read` events and `sources_count: 0` on the
+second Run, and strict reductions in both recorded tokens and wall-clock
+seconds. It never edits or repairs the log.
 
 ## Agent SDK interface
 
@@ -242,5 +277,8 @@ installation, event validation, and publish-only-after-green.
 `kintsugi-agent` takes one Run ID, Seeded Bug ID, Root Cause Class metadata, test
 directory, and verification command. It retains the worktree under
 `.kintsugi/runs/` and appends to `events.jsonl`; both paths can be overridden.
-The complete command and Registry configuration are documented in
+`kintsugi-agent-live-demo` requires a capture ID and per-Run budget, defaults to
+`claude-sonnet-4-6`, retains worktrees under
+`.kintsugi/live-demos/<capture-id>/runs/`, and writes the preserved capture
+under `demo/issue-7/`. The complete commands and Registry configuration are documented in
 [`agent/README.md`](../../agent/README.md).
