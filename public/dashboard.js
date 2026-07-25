@@ -88,6 +88,9 @@ function buildComparisons(runs, events) {
 
   const grouped = new Map();
   for (const run of runs) {
+    if (run.outcome !== "passed") {
+      continue;
+    }
     const details = runDetails.get(run.run_id);
     if (!details?.rootCauseClass || !details.path) {
       continue;

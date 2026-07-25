@@ -28,7 +28,8 @@ failed fix.
 
 The SDK's final `ResultMessage` supplies `usage`, `total_cost_usd`, and duration
 facts. The runtime records the token fields and cost directly; it does not
-derive comparisons.
+derive comparisons. If the SDK fails before returning those facts, the failed
+Run records `null` rather than inventing zero usage.
 
 ## Current files
 
@@ -41,6 +42,7 @@ derive comparisons.
 | [`agent/src/kintsugi_agent/verification.py`](../../agent/src/kintsugi_agent/verification.py) | Restores committed tests and enforces two attempts |
 | [`agent/src/kintsugi_agent/worktrees.py`](../../agent/src/kintsugi_agent/worktrees.py) | Creates detached worktrees from `baseline` |
 | [`agent/src/kintsugi_agent/events.py`](../../agent/src/kintsugi_agent/events.py) | Validates and appends the JSONL contract |
+| [`agent/src/kintsugi_agent/live_pair_cli.py`](../../agent/src/kintsugi_agent/live_pair_cli.py) | Drives and validates the paid Research-to-Reuse acceptance pair |
 
 ## One Run, end to end
 
@@ -114,8 +116,11 @@ Permit editing only after both of these facts exist earlier in sequence:
 1. `hypothesis_formed`;
 2. `strategy_recorded` with citations.
 
-The gate is the same on both paths. On the Research Path, sources come from
-`WebFetch`; on the Reuse Path, they come from the installed Skill.
+The gate is the same on both paths. On the Research Path, every strategy URL
+must already have been observed through `WebFetch`; a model-supplied URL alone
+cannot unlock editing. On the Reuse Path, URLs must come from the exact
+Registry `get_skill` response retained by the hook, and the runtime installs
+that authoritative document rather than model-supplied Skill text.
 
 ### Verification backstop
 
@@ -136,11 +141,15 @@ root directory.
 
 ### `PostToolUse`: factual observation
 
-Observe meaningful tool results and append the corresponding event. The hook
-must preserve per-Run sequence order and never rewrite prior lines.
+The hook is registered globally and observes every completed tool call. For
+calls represented by ADR-0007's semantic event vocabulary, it appends the
+corresponding event; other calls do not invent a new event type. The hook must
+preserve per-Run sequence order and never rewrite prior lines.
 
 `WebSearch` discovers candidate pages; it does not count as a source read.
 `WebFetch` reads a page, so each fetch produces `source_read`.
+`WebFetch` is denied until `registry_queried{decision:"research"}` exists, which
+also prevents a caller from researching before it consults the Registry.
 
 ## Event ownership
 
@@ -202,6 +211,8 @@ tooling.
 
 - Passing restored tests is the only definition of a verified fix.
 - A Run stops after two failed attempts.
+- A source edit after passing tests invalidates that pass and requires another
+  verification attempt.
 - Failed Runs remain in the event feed and are excluded from metric
   comparisons.
 - Only a passing Research Path Run may call `publish_skill`.
@@ -213,8 +224,11 @@ tooling.
 
 Automated tests should invoke hook callbacks with constructed tool-call payloads
 and event history, then assert on permission decisions and appended facts. A
-full live agent Run costs network time and model tokens, so it belongs in dry-run
-and demo verification rather than the fast unit suite.
+full live agent Run costs network time and model tokens, so it belongs in
+dry-run and demo verification rather than the fast unit suite. The opt-in
+`kintsugi-agent-live-pair` command performs the issue #6 acceptance story
+against `scheduling` and `reports`: Research then publish, followed by Reuse in
+a second fresh worktree with zero `source_read` events.
 
 The package also tests the exported Run boundary for fresh worktree commands,
 test restoration, two-attempt stopping, SDK configuration, metrics, Skill

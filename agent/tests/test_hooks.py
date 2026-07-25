@@ -121,6 +121,55 @@ class EditPolicyTests(unittest.IsolatedAsyncioTestCase):
             ],
         )
 
+    async def test_edit_after_green_invalidates_permission_to_publish(self) -> None:
+        await self.events.append(
+            "registry_queried",
+            decision="research",
+            top_score=0.0,
+            skill_id=None,
+        )
+        await self.events.append(
+            "tests_run",
+            passed=1,
+            failed=0,
+            output_tail="Ran 1 test\nOK",
+        )
+        await self.events.append(
+            "patch_applied",
+            files_touched=["sandbox/bug.py"],
+        )
+
+        decision = await self.hooks.pre_tool_use(
+            {
+                "hook_event_name": "PreToolUse",
+                "tool_name": "mcp__kintsugi-skill-registry__publish_skill",
+                "tool_input": {"name": "A Root Cause Class"},
+            },
+            None,
+            {"signal": None},
+        )
+
+        self.assertEqual(
+            "deny",
+            decision["hookSpecificOutput"]["permissionDecision"],
+        )
+
+    async def test_web_fetch_requires_an_explicit_research_decision(self) -> None:
+        decision = await self.hooks.pre_tool_use(
+            {
+                "hook_event_name": "PreToolUse",
+                "tool_name": "WebFetch",
+                "tool_input": {"url": "https://example.test/source"},
+            },
+            None,
+            {"signal": None},
+        )
+
+        self.assertEqual(
+            "deny",
+            decision["hookSpecificOutput"]["permissionDecision"],
+        )
+
     async def test_direct_bash_verification_is_denied(self) -> None:
         decision = await self.hooks.pre_tool_use(
             {

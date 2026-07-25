@@ -23,7 +23,7 @@ class RuntimeTools:
         self.worktree = Path(worktree)
         self.events = events
         self.verifier = verifier
-        self._installed_skill: tuple[str, str] | None = None
+        self._installed_skill: tuple[str, str, set[str]] | None = None
 
     async def record_hypothesis(self, hypothesis: str) -> dict[str, Any]:
         if not hypothesis.strip():
@@ -47,21 +47,45 @@ class RuntimeTools:
                 "recorded": False,
                 "feedback": "A fix strategy needs prose and at least one primary-source URL.",
             }
+        registry_event = await self.events.latest("registry_queried")
+        if registry_event is None:
+            return {
+                "recorded": False,
+                "feedback": "Query the Skill Registry before recording a fix strategy.",
+            }
+        if registry_event["decision"] == "research":
+            allowed_sources = await self.events.source_urls()
+            provenance = "WebFetch calls from this Research Path"
+        elif self._installed_skill is not None:
+            _, _, allowed_sources = self._installed_skill
+            provenance = "the Skill installed for this Reuse Path"
+        else:
+            return {
+                "recorded": False,
+                "feedback": "Install the Registry-selected Skill before recording its strategy.",
+            }
+        unobserved = sorted(set(usable_sources) - allowed_sources)
+        if unobserved:
+            return {
+                "recorded": False,
+                "feedback": (
+                    "Every strategy source must come from "
+                    f"{provenance}; these were not observed: {', '.join(unobserved)}"
+                ),
+            }
         result: dict[str, Any] = {
             "recorded": True,
             "strategy": strategy.strip(),
             "sources": usable_sources,
         }
         if self._installed_skill is not None:
-            skill_id, name = self._installed_skill
+            skill_id, name, _ = self._installed_skill
             result["reused_skill"] = {"id": skill_id, "name": name}
         return result
 
     async def install_skill(
         self,
         skill_id: str,
-        name: str,
-        document: str,
     ) -> dict[str, Any]:
         decision = await self.events.latest("registry_queried")
         if (
@@ -78,13 +102,20 @@ class RuntimeTools:
                 "installed": False,
                 "feedback": "The Skill id must be a safe single directory name.",
             }
-        if not document.strip():
-            return {"installed": False, "feedback": "The Skill document is empty."}
+        retrieved = await self.events.retrieved_skill(skill_id)
+        if retrieved is None:
+            return {
+                "installed": False,
+                "feedback": "Call get_skill for the Registry-selected id before installing it.",
+            }
+        name = str(retrieved["name"])
+        document = str(retrieved["document"])
+        usable_sources = {str(source) for source in retrieved["sources"]}
 
         destination = self.worktree / ".claude" / "skills" / skill_id / "SKILL.md"
         destination.parent.mkdir(parents=True, exist_ok=False)
         destination.write_text(document, encoding="utf-8")
-        self._installed_skill = (skill_id, name)
+        self._installed_skill = (skill_id, name, usable_sources)
         return {
             "installed": True,
             "skill_id": skill_id,
@@ -133,15 +164,13 @@ def build_runtime_server(runtime: RuntimeTools) -> Any:
 
     @tool(
         "install_skill",
-        "Install the complete SKILL.md selected by the Registry into this Run.",
-        {"skill_id": str, "name": str, "document": str},
+        "Install the authoritative get_skill response selected by the Registry into this Run.",
+        {"skill_id": str},
     )
     async def install_skill(args: dict[str, Any]) -> dict[str, Any]:
         return _tool_result(
             await runtime.install_skill(
                 skill_id=str(args["skill_id"]),
-                name=str(args["name"]),
-                document=str(args["document"]),
             )
         )
 

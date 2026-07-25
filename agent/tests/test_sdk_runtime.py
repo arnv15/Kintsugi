@@ -145,6 +145,38 @@ class SDKRuntimeTests(unittest.IsolatedAsyncioTestCase):
             },
         )
 
+    async def test_finish_marks_post_verification_edits_failed_and_keeps_unknown_metrics(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            events = EventLog(Path(directory) / "events.jsonl", "run-1")
+            await events.append(
+                "tests_run",
+                passed=1,
+                failed=0,
+                output_tail="Ran 1 test\nOK",
+            )
+            await events.append(
+                "patch_applied",
+                files_touched=["sandbox/bug.py"],
+            )
+            result = ResultMessage(
+                subtype="success",
+                duration_ms=1200,
+                duration_api_ms=900,
+                is_error=False,
+                num_turns=3,
+                session_id="session-1",
+                total_cost_usd=None,
+                usage=None,
+            )
+
+            event = await finish_run(events, result=result, seconds=2.5)
+
+        self.assertEqual("failed", event["outcome"])
+        self.assertIsNone(event["tokens"])
+        self.assertIsNone(event["cost_usd"])
+
 
 if __name__ == "__main__":
     unittest.main()

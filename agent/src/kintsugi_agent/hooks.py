@@ -35,6 +35,18 @@ class RunHooks:
     ) -> dict[str, Any]:
         """Deny edits that violate worktree, test-integrity, or ordering rules."""
         tool_name = input_data.get("tool_name")
+        if await self.events.verification_attempts() >= 2:
+            latest_tests = await self.events.latest("tests_run")
+            if latest_tests is not None and latest_tests["failed"] > 0:
+                return {
+                    "continue_": False,
+                    "stopReason": "This Run exhausted its two verification attempts.",
+                    **_permission(
+                        "deny",
+                        "This Run stops after two failed verification attempts.",
+                    ),
+                }
+
         if tool_name == "Bash":
             command = input_data.get("tool_input", {}).get("command", "")
             if isinstance(command, str) and _looks_like_verification(command):
@@ -46,13 +58,10 @@ class RunHooks:
 
         if isinstance(tool_name, str) and tool_name.endswith("__publish_skill"):
             registry_event = await self.events.latest("registry_queried")
-            tests_event = await self.events.latest("tests_run")
             is_green_research = (
                 registry_event is not None
                 and registry_event["decision"] == "research"
-                and tests_event is not None
-                and tests_event["failed"] == 0
-                and tests_event["passed"] > 0
+                and await self.events.current_verification_passed()
             )
             if not is_green_research:
                 return _permission(
@@ -66,12 +75,12 @@ class RunHooks:
 
         if tool_name == "WebFetch":
             registry_event = await self.events.latest("registry_queried")
-            if registry_event and registry_event["decision"] == "reuse":
-                return _permission(
-                    "deny",
-                    "The Registry selected the Reuse Path; use the cited Skill without WebFetch.",
-                )
-            return {}
+            if registry_event and registry_event["decision"] == "research":
+                return {}
+            return _permission(
+                "deny",
+                "WebFetch is available only after the Registry selects the Research Path.",
+            )
 
         if tool_name not in {"Edit", "Write"}:
             return {}
@@ -155,6 +164,8 @@ class RunHooks:
                 url=url,
                 title=str(response.get("title") or url),
             )
+        elif tool_name.endswith("__get_skill"):
+            await self.events.remember_retrieved_skill(response)
         elif (
             tool_name.endswith("__record_strategy")
             and response.get("recorded") is True
@@ -192,6 +203,14 @@ class RunHooks:
                 failed=int(response.get("failed_count", 0)),
                 output_tail=str(response.get("output_tail", "")),
             )
+            if (
+                int(response.get("failed_count", 0)) > 0
+                and await self.events.verification_attempts() >= 2
+            ):
+                return {
+                    "continue_": False,
+                    "stopReason": "This Run stopped after two failed verification attempts.",
+                }
         elif tool_name.endswith("__publish_skill") and response.get("published") is True:
             await self.events.append(
                 "skill_published",

@@ -184,6 +184,61 @@ class PostToolEventTests(unittest.IsolatedAsyncioTestCase):
             [event["type"] for event in await self.events.events()],
         )
 
+    async def test_get_skill_hook_retains_the_authoritative_install_payload(
+        self,
+    ) -> None:
+        payload = {
+            "id": "known-skill",
+            "name": "Known Skill",
+            "document": "---\nname: Known Skill\n---\n\nApply the strategy.",
+            "sources": ["https://example.test/primary"],
+        }
+
+        await self.post(
+            "mcp__kintsugi-skill-registry__get_skill",
+            {"skill_id": "known-skill"},
+            {"content": [{"type": "text", "text": json.dumps(payload)}]},
+        )
+
+        self.assertEqual(payload, await self.events.retrieved_skill("known-skill"))
+
+    async def test_second_failed_verification_stops_the_sdk_loop(self) -> None:
+        first = await self.hooks.post_tool_use(
+            {
+                "hook_event_name": "PostToolUse",
+                "tool_name": "mcp__kintsugi-runtime__verify_fix",
+                "tool_input": {},
+                "tool_response": {
+                    "attempt": 1,
+                    "passed": False,
+                    "passed_count": 0,
+                    "failed_count": 1,
+                    "output_tail": "FAILED",
+                },
+            },
+            None,
+            {"signal": None},
+        )
+        second = await self.hooks.post_tool_use(
+            {
+                "hook_event_name": "PostToolUse",
+                "tool_name": "mcp__kintsugi-runtime__verify_fix",
+                "tool_input": {},
+                "tool_response": {
+                    "attempt": 2,
+                    "passed": False,
+                    "passed_count": 0,
+                    "failed_count": 1,
+                    "output_tail": "FAILED",
+                },
+            },
+            None,
+            {"signal": None},
+        )
+
+        self.assertNotIn("continue_", first)
+        self.assertFalse(second["continue_"])
+
 
 if __name__ == "__main__":
     unittest.main()

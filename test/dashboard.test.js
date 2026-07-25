@@ -214,6 +214,39 @@ test("chart comparisons pair Research and Reuse Runs within each Root Cause Clas
   });
 });
 
+test("failed Runs with unavailable SDK metrics are excluded from comparisons", () => {
+  const model = buildDashboardModel({
+    events: [
+      {
+        run_id: "failed-research",
+        seq: 1,
+        type: "run_started",
+        bug_id: "scheduling",
+        root_cause_class: "DST-boundary datetime arithmetic",
+      },
+      {
+        run_id: "failed-research",
+        seq: 2,
+        type: "registry_queried",
+        decision: "research",
+      },
+    ],
+    skills: [],
+    runs: [
+      {
+        run_id: "failed-research",
+        tokens: null,
+        cost_usd: null,
+        seconds: 3,
+        sources_count: 0,
+        outcome: "failed",
+      },
+    ],
+  });
+
+  assert.deepEqual(model.comparisons, []);
+});
+
 test("dashboard loads all three fixture endpoints", async () => {
   const requested = [];
   const responses = {

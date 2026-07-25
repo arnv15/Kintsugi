@@ -40,12 +40,15 @@ shared git-backed store. `KINTSUGI_SKILLS_DIR` and
 ## Enforced Run rules
 
 - `Edit` and `Write` cannot target any `tests/` path or leave the worktree.
-- Source edits require an earlier Root Cause Hypothesis and cited strategy.
-- Reuse Path Runs cannot call `WebFetch`.
+- Source edits require an earlier Root Cause Hypothesis and cited strategy whose
+  URLs were observed in that Run.
+- `WebFetch` is unavailable until the Registry selects the Research Path and
+  remains unavailable throughout a Reuse Path Run.
 - Direct Bash verification is denied; `verify_fix` restores committed tests
   immediately before the configured test command.
-- Only two verification attempts can execute.
-- Only a green Research Path Run may publish a Skill.
+- The SDK loop stops after the second failed verification attempt.
+- Any source edit after a green verification invalidates that result.
+- Only a currently green Research Path Run may publish a Skill.
 
 ## Verify the package
 
@@ -53,3 +56,19 @@ shared git-backed store. `KINTSUGI_SKILLS_DIR` and
 uv run --project agent pytest
 uv run --project agent pyright
 ```
+
+## Run the paid live acceptance pair
+
+The normal suite does not invoke a model or spend tokens. After configuring
+Claude Code authentication, this explicit command exercises the real SDK,
+Registry MCP server, hooks, and two fresh worktrees:
+
+```bash
+uv run --project agent kintsugi-agent-live-pair
+```
+
+It first fixes `scheduling` on the Research Path and publishes the learned
+Skill to a new local Registry. It then fixes the paired `reports` bug in another
+baseline worktree and fails unless that Run reuses the published Skill, reads
+zero web sources, and passes. Artifacts are retained under
+`.kintsugi/live-pairs/<pair-id>/`; use `--pair-id` to name a rehearsal.

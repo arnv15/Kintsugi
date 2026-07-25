@@ -50,8 +50,8 @@ You execute one Kintsugi Run against one Seeded Bug. Follow this order exactly:
 2. Form one Root Cause Hypothesis and call record_hypothesis.
 3. Pass exactly that hypothesis to the Skill Registry's search_skills tool.
 4. Obey the Registry's decision:
-   - reuse: call get_skill, install the returned complete document with
-     install_skill, invoke the installed Skill, and do not call WebFetch.
+   - reuse: call get_skill, pass its selected id to install_skill, invoke the
+     installed Skill, and do not call WebFetch.
    - research: use WebSearch to discover primary documentation and WebFetch to
      read it.
 5. Call record_strategy with the fix strategy and its source URLs.
@@ -161,37 +161,29 @@ async def finish_run(
     seconds: float,
 ) -> dict[str, Any]:
     """Append the factual Run outcome and SDK metrics."""
-    history = await events.events()
-    latest_tests = next(
-        (event for event in reversed(history) if event["type"] == "tests_run"),
-        None,
-    )
-    passed = (
-        latest_tests is not None
-        and latest_tests["passed"] > 0
-        and latest_tests["failed"] == 0
-    )
+    passed = await events.current_verification_passed()
     return await events.append(
         "run_finished",
         outcome="passed" if passed else "failed",
         tokens=_total_tokens(result.usage),
-        cost_usd=result.total_cost_usd or 0.0,
+        cost_usd=result.total_cost_usd,
         seconds=seconds,
-        sources_count=sum(event["type"] == "source_read" for event in history),
+        sources_count=await events.source_count(),
     )
 
 
-def _total_tokens(usage: dict[str, Any] | None) -> int:
+def _total_tokens(usage: dict[str, Any] | None) -> int | None:
     if not usage:
-        return 0
+        return None
     token_fields = (
         "input_tokens",
         "output_tokens",
         "cache_creation_input_tokens",
         "cache_read_input_tokens",
     )
-    return sum(
+    values = [
         value
         for field in token_fields
         if isinstance((value := usage.get(field)), int)
-    )
+    ]
+    return sum(values) if values else None

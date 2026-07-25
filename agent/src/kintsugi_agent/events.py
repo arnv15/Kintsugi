@@ -41,6 +41,7 @@ class EventLog:
         self.run_id = run_id
         self._lock = asyncio.Lock()
         self._events: list[dict[str, Any]] = []
+        self._retrieved_skills: dict[str, dict[str, Any]] = {}
 
     async def append(self, event_type: str, **fields: Any) -> dict[str, Any]:
         """Validate and append one event, preserving sequence order."""
@@ -78,6 +79,82 @@ class EventLog:
                 if event["type"] == event_type:
                     return dict(event)
         return None
+
+    async def current_verification_passed(self) -> bool:
+        """Whether the latest patch state is covered by a passing verification."""
+        async with self._lock:
+            latest_tests_index = next(
+                (
+                    index
+                    for index in range(len(self._events) - 1, -1, -1)
+                    if self._events[index]["type"] == "tests_run"
+                ),
+                None,
+            )
+            if latest_tests_index is None:
+                return False
+            latest_tests = self._events[latest_tests_index]
+            changed_afterward = any(
+                event["type"] == "patch_applied"
+                for event in self._events[latest_tests_index + 1 :]
+            )
+            return (
+                latest_tests["passed"] > 0
+                and latest_tests["failed"] == 0
+                and not changed_afterward
+            )
+
+    async def verification_attempts(self) -> int:
+        """Count verification commands that actually executed."""
+        async with self._lock:
+            return sum(event["type"] == "tests_run" for event in self._events)
+
+    async def source_urls(self) -> set[str]:
+        """Return only sources actually observed through WebFetch."""
+        async with self._lock:
+            return {
+                str(event["url"])
+                for event in self._events
+                if event["type"] == "source_read"
+            }
+
+    async def source_count(self) -> int:
+        """Count sources read during this Run."""
+        async with self._lock:
+            return sum(event["type"] == "source_read" for event in self._events)
+
+    async def remember_retrieved_skill(self, payload: dict[str, Any]) -> bool:
+        """Retain the Registry's authoritative get_skill response for installation."""
+        skill_id = payload.get("id")
+        name = payload.get("name")
+        document = payload.get("document")
+        sources = payload.get("sources")
+        if (
+            not isinstance(skill_id, str)
+            or not skill_id
+            or not isinstance(name, str)
+            or not name
+            or not isinstance(document, str)
+            or not document
+            or not isinstance(sources, list)
+            or not sources
+            or any(not isinstance(source, str) or not source for source in sources)
+        ):
+            return False
+        async with self._lock:
+            self._retrieved_skills[skill_id] = {
+                "id": skill_id,
+                "name": name,
+                "document": document,
+                "sources": list(sources),
+            }
+        return True
+
+    async def retrieved_skill(self, skill_id: str) -> dict[str, Any] | None:
+        """Return one exact Registry response retained by the PostToolUse hook."""
+        async with self._lock:
+            skill = self._retrieved_skills.get(skill_id)
+            return dict(skill) if skill is not None else None
 
 
 def validate_event(event: dict[str, Any]) -> None:
@@ -146,10 +223,17 @@ def validate_event(event: dict[str, Any]) -> None:
     }:
         raise InvalidEvent("run_finished.outcome must be passed or failed")
     if event_type == "run_finished":
-        _require_non_negative_integers(event, ("tokens", "sources_count"))
-        for field in ("cost_usd", "seconds"):
-            if not _is_number(event[field]) or event[field] < 0:
-                raise InvalidEvent(f"run_finished.{field} must be a non-negative number")
+        if event["tokens"] is not None:
+            _require_non_negative_integers(event, ("tokens",))
+        _require_non_negative_integers(event, ("sources_count",))
+        if event["cost_usd"] is not None and (
+            not _is_number(event["cost_usd"]) or event["cost_usd"] < 0
+        ):
+            raise InvalidEvent(
+                "run_finished.cost_usd must be a non-negative number or null"
+            )
+        if not _is_number(event["seconds"]) or event["seconds"] < 0:
+            raise InvalidEvent("run_finished.seconds must be a non-negative number")
 
 
 def _require_strings(event: dict[str, Any], fields: tuple[str, ...]) -> None:

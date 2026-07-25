@@ -84,8 +84,11 @@ For each Run, the dashboard joins:
 - `registry_queried` for the Research Path or Reuse Path decision;
 - `/runs` for tokens, cost, seconds, sources read, and outcome.
 
-It groups only by Root Cause Class. It never presents the six heterogeneous
-Seeded Bugs as one flat ranking. Within each group it shows:
+Failed Runs remain visible in activity and summary counts but are excluded
+from comparisons, including when an SDK failure leaves token or cost facts
+unavailable. Passing Runs are grouped only by Root Cause Class. The dashboard
+never presents the six heterogeneous Seeded Bugs as one flat ranking. Within
+each group it shows:
 
 1. tokens and cost;
 2. wall-clock time;
@@ -93,14 +96,6 @@ Seeded Bugs as one flat ranking. Within each group it shows:
 
 Cost is displayed when finite; tokens remain visible beside it. Bar widths are
 relative only to the Runs in that Root Cause Class card.
-
-## Current-to-planned integration note
-
-The current fixture contains passing Runs, and the current comparison projector
-includes any `/runs` entry that has enough matching event detail. ADR-0013 says
-failed Runs must remain visible in the activity feed but be excluded from the
-comparison chart. Issue #7 integration should add or verify that outcome filter
-before the real six-Run capture is considered complete.
 
 ## Rendering behavior
 

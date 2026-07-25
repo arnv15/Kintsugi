@@ -112,16 +112,13 @@ class AgentRuntime:
             result = await self.sdk_loop(options=options, prompt=prompt)
         except Exception:
             elapsed = max(0.0, self.clock() - started)
-            history = await events.events()
             await events.append(
                 "run_finished",
                 outcome="failed",
-                tokens=0,
-                cost_usd=0.0,
+                tokens=None,
+                cost_usd=None,
                 seconds=elapsed,
-                sources_count=sum(
-                    event["type"] == "source_read" for event in history
-                ),
+                sources_count=await events.source_count(),
             )
             raise
 
