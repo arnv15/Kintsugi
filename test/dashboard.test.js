@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import {
   buildDashboardModel,
+  buildProjection,
   loadDashboardData,
 } from "../public/dashboard.js";
 
@@ -169,6 +170,7 @@ test("chart comparisons pair Research and Reuse Runs within each Root Cause Clas
         root_cause_class,
       },
       { run_id, seq: 2, type: "registry_queried", decision },
+      { run_id, seq: 3, type: "tests_run", passed: 18, failed: 0 },
     ],
   );
   const runs = definitions.map(([run_id], index) => ({
@@ -211,7 +213,40 @@ test("chart comparisons pair Research and Reuse Runs within each Root Cause Clas
     costUsd: 0.48,
     seconds: 100,
     sourcesRead: 4,
+    testsPassed: 18,
+    testsFailed: 0,
   });
+});
+
+test("buildProjection extrapolates a comparison's avoided cost across future bugs of the same class", () => {
+  const comparison = {
+    runs: [
+      {
+        path: "Research Path",
+        metrics: { tokens: 38_420, costUsd: 0.461, seconds: 105 },
+      },
+      {
+        path: "Reuse Path",
+        metrics: { tokens: 8_420, costUsd: 0.101, seconds: 36 },
+      },
+    ],
+  };
+
+  const projection = buildProjection(comparison);
+
+  assert.deepEqual(
+    projection.map((row) => row.futureBugs),
+    [10, 100, 1000],
+  );
+  assert.equal(projection[0].tokensAvoided, 300_000);
+  assert.equal(projection[0].costEquivalent, "$3.60");
+  assert.equal(projection[0].agentTimeAvoided, "11.5 minutes");
+  assert.equal(projection[1].tokensAvoided, 3_000_000);
+  assert.equal(projection[1].costEquivalent, "$36.00");
+  assert.equal(projection[1].agentTimeAvoided, "1.92 hours");
+  assert.equal(projection[2].tokensAvoided, 30_000_000);
+  assert.equal(projection[2].costEquivalent, "$360.00");
+  assert.equal(projection[2].agentTimeAvoided, "19.17 hours");
 });
 
 test("failed Runs with unavailable SDK metrics are excluded from comparisons", () => {
