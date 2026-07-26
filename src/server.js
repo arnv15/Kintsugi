@@ -8,6 +8,10 @@ const publicAssets = new Map([
   ["/", ["index.html", "text/html; charset=utf-8"]],
   ["/dashboard.js", ["dashboard.js", "text/javascript; charset=utf-8"]],
   ["/styles.css", ["styles.css", "text/css; charset=utf-8"]],
+  [
+    "/kintsugi-bowl.png",
+    ["../docs/media/dev-post/kintsugi-clipart-clean.png", "image/png"],
+  ],
 ]);
 
 function sendJson(response, statusCode, value) {
@@ -119,23 +123,24 @@ export function createEventServer({
   publicPath = defaultPublicPath,
 }) {
   return createServer(async (request, response) => {
-    const publicAsset = publicAssets.get(request.url);
+    const requestUrl = new URL(request.url, "http://localhost");
+    const publicAsset = publicAssets.get(requestUrl.pathname);
     if (request.method === "GET" && publicAsset) {
       await sendPublicAsset(response, publicPath, publicAsset);
       return;
     }
 
-    if (request.method === "GET" && request.url === "/events") {
+    if (request.method === "GET" && requestUrl.pathname === "/events") {
       sendJson(response, 200, await readEvents(eventsPath));
       return;
     }
 
-    if (request.method === "GET" && request.url === "/skills") {
+    if (request.method === "GET" && requestUrl.pathname === "/skills") {
       sendJson(response, 200, await readSkills(skillsPath));
       return;
     }
 
-    if (request.method === "GET" && request.url === "/runs") {
+    if (request.method === "GET" && requestUrl.pathname === "/runs") {
       sendJson(response, 200, readRunSummaries(await readEvents(eventsPath)));
       return;
     }

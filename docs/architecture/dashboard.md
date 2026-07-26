@@ -30,39 +30,33 @@ During a demo, a viewer should be able to answer:
 
 ## Page structure
 
-The page is one scroll, with `<nav>` anchors jumping to each part:
+The page is one scroll, with `<nav>` anchors jumping to the authored repair
+story and live evidence:
 
-1. **Hero** — the live summary counts (completed Runs, Skills, verified fixes).
-2. **How it works** (`#how-it-works`) — a `.seam-steps` timeline (a single
-   gold seam connecting four lit nodes, echoing the brand mark's mended
-   crack) naming the real flow: diagnose, ask the Registry, reuse or
-   research, verify and publish. Not derived from live data; wording must be
-   kept in sync with [`docs/architecture/skill-registry.md`](skill-registry.md)
-   by hand. This is the page's one authored scroll-reveal moment — each
-   `.seam-step` fades in and lights its node in sequence; nothing else on the
-   page repeats that entrance.
-3. **Install** (`#install`) — the two commands from
-   [`registry/README.md`](../../registry/README.md) (run the Registry over
-   MCP, or clone the Skills as plain files), each with a copy-to-clipboard
-   button. Keep these commands byte-for-byte identical to the README; this
-   page does not re-derive them.
-4. **Dashboard** (`#dashboard`) — the three live sections below, unchanged in
-   behavior: Run comparisons, Portable Skills, Latest activity.
+1. **Hero** — a cinematic repaired-bowl composition with animated gold seams
+   and live counts for completed Runs, verified outcomes, stored Skills, and
+   tokens avoided in complete within-class comparison pairs.
+2. **The repair** (`#repair`) — a four-step authored explanation of diagnose,
+   query, verify, and preserve. Its vertical animated seam is decorative; the
+   wording must stay in sync with
+   [`docs/architecture/skill-registry.md`](skill-registry.md).
+3. **The living seam** (`#evidence`) — an SVG projection of the latest ten
+   evidence-bearing events. Node titles expose the underlying plain-language
+   event descriptions, and the seam distinguishes a latest verified finish
+   from evidence still accumulating.
+4. **Research against reuse** — the existing within-Root-Cause-Class Run
+   comparisons, presented as paired metric bars.
+5. **Portable repairs** (`#skills`) — Skill strategy, symptom, sources, and
+   reuse outcomes. The circular indicator is an observed verified-reuse ratio;
+   a never-reused Skill is labeled “New” instead of displaying a made-up
+   confidence score.
+6. **Append-only history** — every event in recorded order, translated to
+   plain language.
 
-Section headings are heading-plus-description only; the hero's eyebrow
-("Live evidence, not promises") is the page's one named kicker; no other
-section repeats an uppercase label or a digit prefix above its `<h2>`.
-
-Every `[data-reveal]` element (the four `.seam-step` items) fades and slides
-in once via `IntersectionObserver` (`initScrollReveal`), staggered per item;
-`.seam-step.is-visible .seam-node` additionally fills and glows, drawing the
-seam through the sequence. `initScrollReveal` itself only special-cases a
-missing `IntersectionObserver` (reveals everything immediately);
-`prefers-reduced-motion` is handled separately in `styles.css`, which forces
-`[data-reveal]` to its visible state outright, so the observer still runs but
-has nothing left to animate. Copy buttons (`initCopyButtons`) write the code
-block's own `textContent` to the clipboard, so the button can never drift
-from the command it displays.
+The bowl image is decorative and the live seam is an accessible SVG image.
+Keyboard focus has a visible gold outline, the page begins with a skip link,
+and `prefers-reduced-motion` reduces every seam, node, pulse, and bar animation
+to its final state.
 
 ## Inputs
 
@@ -82,6 +76,8 @@ changes to “Event log unavailable.” The next scheduled poll tries again.
 ```mermaid
 flowchart LR
   events["/events"] --> activity["Plain-language activity"]
+  events --> latest["Latest evidence-bearing events"]
+  latest --> seam["Animated gold evidence seam"]
   events --> reuseJoin["Join skill_reused to run_finished<br/>by run_id"]
   skills["/skills"] --> reuseJoin
   reuseJoin --> cards["Skill cards and success tallies"]
@@ -89,17 +85,24 @@ flowchart LR
   runs["/runs"] --> runDetails
   runDetails --> group["Group by Root Cause Class"]
   group --> compare["Research Path versus Reuse Path"]
+  compare --> summary["Pair-scoped token savings"]
+  runs --> summary
   activity --> view["Dashboard DOM"]
+  seam --> view
   cards --> view
   compare --> view
+  summary --> view
 ```
 
 `buildDashboardModel` is the main testable interface. It accepts
-`{events, skills, runs}` and returns three view models:
+`{events, skills, runs}` and returns four view models:
 
-- `activity`: every event, still in input order, with plain-language text;
+- `activity`: every event, still in input order, with plain-language text and
+  whether a finish represents a verified Run;
 - `skills`: Skill content plus `reused` and `succeeded` tallies;
 - `comparisons`: Runs grouped by Root Cause Class with Research Path first.
+- `summary`: completed and passing counts, passing percentage, token and
+  duration totals, reuse count, and pair-scoped avoided tokens.
 
 ## Reuse tally
 
@@ -133,13 +136,24 @@ each group it shows:
 Cost is displayed when finite; tokens remain visible beside it. Bar widths are
 relative only to the Runs in that Root Cause Class card.
 
+The hero's avoided-token count is also derived only from complete comparable
+pairs. For each pair, it adds `max(0, research tokens - reuse tokens)`. An
+unpaired Research Path never inflates the number.
+
 ## Rendering behavior
 
-- Summary counts show completed Runs, stored Skills, and the passing percentage.
+- Summary counts show completed Runs, stored Skills, passing percentage, and
+  pair-scoped avoided tokens.
+- The living seam uses the latest ten `run_started`, `hypothesis_formed`,
+  `registry_queried`, `patch_applied`, `tests_run`, and `run_finished` events.
 - Activity text translates every accepted event type into plain language.
 - Unknown event types still appear as “Recorded …” rather than disappearing.
 - Empty states explain what data is waiting to arrive.
 - Source links open independently and show a readable hostname.
+- A successful poll is fingerprinted; unchanged data updates status and time
+  without rebuilding the DOM or restarting seam animations.
+- A failed first poll replaces loading copy with explicit retrying states. A
+  later failed poll keeps the last successful evidence visible.
 - Polling reads files through the server; the dashboard has no direct
   filesystem access and no write capability.
 

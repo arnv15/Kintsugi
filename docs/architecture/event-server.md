@@ -35,6 +35,7 @@ directory through configuration alone.
 | `GET /runs` | One projection per `run_finished` event with recorded metrics and outcome | Count sources, calculate cost, compare Runs, or calculate speedup |
 | `GET /` | Dashboard HTML | Server-side rendering |
 | `GET /dashboard.js` and `GET /styles.css` | Local dashboard assets with no-cache headers | Bundle or transform assets |
+| `GET /kintsugi-bowl.png` | Decorative repaired-bowl artwork used by the dashboard hero | Transform or derive the image |
 | Any unknown route | `404 {"error":"Not found"}` | Route fallback |
 
 The `/runs` response is a field projection, not an aggregation. For example,
@@ -88,6 +89,9 @@ sequenceDiagram
 Files are read on every request. This keeps the interface stateless and means
 newly appended events appear on the next dashboard poll without restarting the
 server.
+
+Static routes are matched against the parsed request pathname, so query
+parameters do not change the route contract.
 
 ## Parsing behavior
 

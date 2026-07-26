@@ -5,173 +5,229 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta
       name="description"
-      content="Live evidence that Kintsugi fixes bugs and reuses what it learns."
+      content="Live evidence that Kintsugi turns verified bug fixes into reusable Skills."
     >
-    <title>Kintsugi · Run evidence</title>
+    <title>Kintsugi · Every repair leaves a golden path</title>
     <link rel="stylesheet" href="/styles.css">
     <script type="module" src="/dashboard.js"></script>
   </head>
   <body>
-    <header class="site-header">
-      <a class="brand" href="/" aria-label="Kintsugi dashboard home">
-        <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
-          <path d="M6 5h28v30H6z"></path>
-          <path class="brand-seam" d="M6 15h10l5-6 4 13 9 3"></path>
-        </svg>
-        <span>Kintsugi</span>
-      </a>
-      <nav class="site-nav" aria-label="Page sections">
-        <a href="#how-it-works">How it works</a>
-        <a href="#install">Install</a>
-        <a href="#dashboard">Dashboard</a>
-      </nav>
-      <div class="live-status" id="live-status" role="status">
-        <span class="live-dot" aria-hidden="true"></span>
-        <span id="status-text">Connecting to the event log…</span>
-      </div>
-    </header>
+    <a class="skip-link" href="#main-content">Skip to dashboard</a>
 
-    <main>
-      <section class="hero" aria-labelledby="hero-title">
-        <div class="hero-copy">
-          <p class="eyebrow">Live evidence, not promises</p>
-          <h1 id="hero-title">Fix once.<br><em>Reuse what worked.</em></h1>
-          <p class="hero-lede">
-            Every Run leaves a trace. See Kintsugi diagnose a Root Cause Class,
-            verify a fix, and turn the learning into a portable Skill.
+    <main id="main-content">
+      <section class="cinema-hero" aria-labelledby="hero-title">
+        <header class="cinema-nav">
+          <a class="wordmark" href="/" aria-label="Kintsugi dashboard home">
+            <span class="wordmark-star" aria-hidden="true">✦</span>
+            KINTSUGI
+          </a>
+          <nav aria-label="Dashboard sections">
+            <a href="#repair">The repair</a>
+            <a href="#evidence">Evidence</a>
+            <a href="#skills">Skills</a>
+          </nav>
+          <div class="live-pill" id="live-status" role="status">
+            <i aria-hidden="true"></i>
+            <span id="status-text">Connecting…</span>
+          </div>
+        </header>
+
+        <div class="cinema-copy">
+          <p class="kicker">Fixes that become infrastructure</p>
+          <h1 id="hero-title">
+            Every break leaves<br><em>a golden path.</em>
+          </h1>
+          <p class="hero-copy">
+            Kintsugi diagnoses a Root Cause Class, verifies the repair, and
+            preserves what worked as a portable Skill for the next agent.
           </p>
+          <a class="hero-link" href="#evidence">
+            Follow the repair
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 12h16M14 6l6 6-6 6"></path>
+            </svg>
+          </a>
         </div>
-        <dl class="summary" aria-label="Dashboard summary">
-          <div>
+
+        <div class="bowl-stage cinema-bowl" aria-hidden="true">
+          <div class="bowl-aura"></div>
+          <img src="/kintsugi-bowl.png" alt="">
+          <svg class="repair-overlay" viewBox="0 0 1000 1000">
+            <defs>
+              <filter id="gold-glow">
+                <feGaussianBlur stdDeviation="8" result="blur"></feGaussianBlur>
+                <feMerge>
+                  <feMergeNode in="blur"></feMergeNode>
+                  <feMergeNode in="SourceGraphic"></feMergeNode>
+                </feMerge>
+              </filter>
+            </defs>
+            <path
+              class="seam seam-one"
+              d="M502 825 C500 760 468 710 490 650 C515 580 462 530 420 480 C385 438 360 390 345 325"
+            ></path>
+            <path
+              class="seam seam-two"
+              d="M486 651 C570 640 610 600 655 545 C710 480 735 400 730 320"
+            ></path>
+            <path
+              class="seam seam-three"
+              d="M421 480 C350 500 310 535 245 560 C205 575 180 600 155 640"
+            ></path>
+          </svg>
+        </div>
+
+        <dl class="cinema-metrics" aria-label="Dashboard summary">
+          <div class="metric">
             <dt>Completed Runs</dt>
             <dd id="run-count">—</dd>
+            <small>from the event log</small>
           </div>
-          <div>
-            <dt>Portable Skills</dt>
-            <dd id="skill-count">—</dd>
-          </div>
-          <div>
-            <dt>Verified fixes</dt>
+          <div class="metric">
+            <dt>Verified</dt>
             <dd id="success-rate">—</dd>
+            <small id="success-detail">waiting for outcomes</small>
+          </div>
+          <div class="metric">
+            <dt>Skills preserved</dt>
+            <dd id="skill-count">—</dd>
+            <small>portable repairs</small>
+          </div>
+          <div class="metric">
+            <dt>Tokens avoided</dt>
+            <dd id="tokens-avoided">—</dd>
+            <small>within comparable pairs</small>
           </div>
         </dl>
+        <span class="scroll-note">Scroll to descend into the repair</span>
       </section>
 
-      <section class="explainer-section" id="how-it-works" aria-labelledby="how-it-works-title">
-        <div class="section-heading">
-          <h2 id="how-it-works-title">One fix, mended for reuse</h2>
-          <p>
-            A cracked pot mended with gold seams is stronger at the break.
-            Kintsugi treats a bug the same way: the repair itself becomes the
-            valuable part.
-          </p>
+      <section class="process-story" id="repair" aria-labelledby="repair-title">
+        <div class="story-heading">
+          <span>One repair, four proof points</span>
+          <h2 id="repair-title">
+            A crack is only valuable<br>when you can trace it.
+          </h2>
         </div>
-        <ol class="seam-steps">
-          <li class="seam-step" data-reveal>
-            <span class="seam-node" aria-hidden="true"></span>
-            <h3>Diagnose</h3>
-            <p>
-              A Run begins with one sentence: the Root Cause Hypothesis — the
-              kind of mistake this looks like, never where it happens or how
-              it surfaces.
-            </p>
+        <div class="story-seam" aria-hidden="true">
+          <svg viewBox="0 0 240 920">
+            <path
+              class="story-ghost"
+              d="M120 0 C40 130 200 210 95 345 C30 430 200 520 118 660 C75 735 130 815 120 920"
+            ></path>
+            <path
+              class="story-gold"
+              d="M120 0 C40 130 200 210 95 345 C30 430 200 520 118 660 C75 735 130 815 120 920"
+            ></path>
+          </svg>
+        </div>
+        <ol class="story-steps">
+          <li>
+            <span>01</span>
+            <div>
+              <h3>Diagnose the class</h3>
+              <p>
+                Name the kind of mistake before touching the surface symptom.
+              </p>
+            </div>
           </li>
-          <li class="seam-step" data-reveal>
-            <span class="seam-node" aria-hidden="true"></span>
-            <h3>Ask the Registry</h3>
-            <p>
-              That hypothesis goes to the shared Skill Registry. The Registry,
-              not the agent, decides the next step: reuse or research.
-            </p>
+          <li>
+            <span>02</span>
+            <div>
+              <h3>Ask the Registry</h3>
+              <p>
+                Search by Root Cause Hypothesis, then let evidence choose reuse
+                or research.
+              </p>
+            </div>
           </li>
-          <li class="seam-step" data-reveal>
-            <span class="seam-node" aria-hidden="true"></span>
-            <h3>Reuse or research</h3>
-            <p>
-              A match installs the winning Skill's strategy outright. No match
-              means reading primary sources and building a fix from scratch.
-            </p>
+          <li>
+            <span>03</span>
+            <div>
+              <h3>Repair and verify</h3>
+              <p>
+                The fix only becomes real when restored tests prove the seam
+                holds.
+              </p>
+            </div>
           </li>
-          <li class="seam-step" data-reveal>
-            <span class="seam-node" aria-hidden="true"></span>
-            <h3>Verify, then publish</h3>
-            <p>
-              A fix only counts once its tests pass. A verified Research Path
-              fix becomes a new Skill, pushed for the next agent to reuse.
-            </p>
+          <li>
+            <span>04</span>
+            <div>
+              <h3>Preserve what worked</h3>
+              <p>
+                A verified Research Path becomes a portable Skill for the next
+                Run.
+              </p>
+            </div>
           </li>
         </ol>
       </section>
 
-      <section class="install-section" id="install" aria-labelledby="install-title">
-        <div class="section-heading">
-          <h2 id="install-title">Join the shared Registry</h2>
+      <section class="cinema-evidence" id="evidence" aria-labelledby="evidence-title">
+        <div class="section-copy">
+          <p class="kicker">The living seam</p>
+          <h2 id="evidence-title">Watch evidence<br>join the repair.</h2>
           <p>
-            The Registry is a standalone MCP server. Point any Claude Code or
-            Agent SDK client at it, or skip the server entirely and install
-            the Skills as plain files.
+            Each node is a recorded fact. The line reaches gold only when a Run
+            ends green.
           </p>
         </div>
-        <div class="install-grid">
-          <div class="install-card">
-            <p class="install-label">Run the Registry over MCP</p>
-            <pre class="code-block"><code id="install-command-registry">KINTSUGI_SKILLS_REMOTE=https://github.com/arnv15/kintsugi-skills.git \
-  uvx --from "git+https://github.com/arnv15/Kintsugi#subdirectory=registry" kintsugi-registry</code></pre>
-            <button type="button" class="copy-button" data-copy-target="install-command-registry">
-              Copy
-            </button>
-          </div>
-          <div class="install-card">
-            <p class="install-label">Or install Skills as plain files</p>
-            <pre class="code-block"><code id="install-command-clone">git clone https://github.com/arnv15/kintsugi-skills .claude/skills/kintsugi</code></pre>
-            <button type="button" class="copy-button" data-copy-target="install-command-clone">
-              Copy
-            </button>
-          </div>
+        <div class="seam-graph" id="seam-graph" aria-live="polite">
+          <p class="loading-copy">Reading the latest proof points…</p>
         </div>
+        <dl class="impact-strip">
+          <div class="metric">
+            <dt>Average duration</dt>
+            <dd id="average-duration">—</dd>
+          </div>
+          <div class="metric">
+            <dt>Reuse events</dt>
+            <dd id="reuse-count">—</dd>
+          </div>
+          <div class="metric">
+            <dt>Total recorded tokens</dt>
+            <dd id="total-tokens">—</dd>
+          </div>
+        </dl>
       </section>
 
-      <div class="dashboard-intro" id="dashboard">
-        <h2>Live evidence from the event log</h2>
-        <p>
-          Everything below is read straight from <code>/events</code>,
-          <code>/skills</code>, and <code>/runs</code> — nothing here is a
-          precomputed conclusion.
-        </p>
-      </div>
-
-      <section class="dashboard-section comparisons-section" aria-labelledby="comparisons-title">
-        <div class="section-heading">
-          <h2 id="comparisons-title">Run comparisons</h2>
+      <section class="run-evidence" aria-labelledby="comparisons-title">
+        <div class="evidence-heading">
+          <p class="kicker">Comparable evidence</p>
+          <h2 id="comparisons-title">Research against reuse.</h2>
           <p>
-            Research and Reuse Paths are compared only within the same Root
-            Cause Class, where the work is genuinely comparable.
+            Runs are compared only inside the same Root Cause Class, where the
+            work is genuinely comparable.
           </p>
         </div>
         <div class="comparison-grid" id="comparisons" aria-live="polite">
-          <p class="loading-copy">Loading Run evidence…</p>
+          <p class="loading-copy">Loading Run comparisons…</p>
         </div>
       </section>
 
-      <section class="dashboard-section" aria-labelledby="skills-title">
-        <div class="section-heading">
-          <h2 id="skills-title">Portable Skills</h2>
+      <section class="cinema-skills" id="skills" aria-labelledby="skills-title">
+        <div class="skills-heading">
+          <div>
+            <p class="kicker">Portable repairs</p>
+            <h2 id="skills-title">What the system<br>remembers.</h2>
+          </div>
           <p>
-            Each Skill captures one Root Cause Class, its verified strategy, and
-            the primary sources that support it.
+            Every Skill keeps the symptom, verified strategy, and primary
+            sources together.
           </p>
         </div>
-        <div class="skill-grid" id="skills" aria-live="polite">
-          <p class="loading-copy">Loading Skills…</p>
+        <div class="cinema-skill-grid" id="skill-grid" aria-live="polite">
+          <p class="loading-copy">Loading portable Skills…</p>
         </div>
       </section>
 
-      <section class="dashboard-section activity-section" aria-labelledby="activity-title">
-        <div class="section-heading">
-          <h2 id="activity-title">Latest activity</h2>
+      <section class="activity-section" aria-labelledby="activity-title">
+        <div class="activity-heading">
+          <p class="kicker">Append-only history</p>
+          <h2 id="activity-title">The latest marks<br>on the seam.</h2>
           <p>
-            A plain-language view of every append-only event, in the exact order
-            it was recorded.
+            Plain-language evidence, shown in the exact order it was recorded.
           </p>
         </div>
         <ol class="activity-feed" id="activity" aria-live="polite">
@@ -180,8 +236,9 @@
       </section>
     </main>
 
-    <footer>
-      <p>Kintsugi · One fix becomes shared knowledge.</p>
+    <footer class="site-footer">
+      <a class="footer-wordmark" href="/">Kintsugi</a>
+      <p>One verified repair becomes shared knowledge.</p>
       <p id="last-updated">Waiting for the first update</p>
     </footer>
   </body>

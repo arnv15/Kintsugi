@@ -207,19 +207,22 @@ test("GET /runs projects recorded facts without computing metrics", async () => 
 test("GET / serves the dashboard and its local assets", async () => {
   const baseUrl = await startServer({ events: [] });
 
-  const [pageResponse, scriptResponse, stylesResponse] = await Promise.all([
+  const [pageResponse, scriptResponse, stylesResponse, bowlResponse] =
+    await Promise.all([
     fetch(`${baseUrl}/`),
     fetch(`${baseUrl}/dashboard.js`),
     fetch(`${baseUrl}/styles.css`),
+    fetch(`${baseUrl}/kintsugi-bowl.png`),
   ]);
   const page = await pageResponse.text();
 
   assert.equal(pageResponse.status, 200);
   assert.match(pageResponse.headers.get("content-type"), /^text\/html/);
   assert.match(page, /<main/);
-  assert.match(page, /Latest activity/);
-  assert.match(page, /Portable Skills/);
-  assert.match(page, /Run comparisons/);
+  assert.match(page, /Every break leaves/);
+  assert.match(page, /One repair, four proof points/);
+  assert.match(page, /The living seam/);
+  assert.match(page, /What the system/);
   assert.equal(scriptResponse.status, 200);
   assert.match(
     scriptResponse.headers.get("content-type"),
@@ -227,6 +230,8 @@ test("GET / serves the dashboard and its local assets", async () => {
   );
   assert.equal(stylesResponse.status, 200);
   assert.match(stylesResponse.headers.get("content-type"), /^text\/css/);
+  assert.equal(bowlResponse.status, 200);
+  assert.match(bowlResponse.headers.get("content-type"), /^image\/png/);
 });
 
 test("bundled fixture contains complete ordered Research and Reuse Path Runs", async () => {

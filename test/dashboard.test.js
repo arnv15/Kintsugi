@@ -247,6 +247,91 @@ test("failed Runs with unavailable SDK metrics are excluded from comparisons", (
   assert.deepEqual(model.comparisons, []);
 });
 
+test("summary derives avoided tokens only from complete comparable Run pairs", () => {
+  const events = [
+    {
+      run_id: "research-mutable",
+      seq: 1,
+      type: "run_started",
+      bug_id: "inventory-history",
+      root_cause_class: "mutable default argument",
+    },
+    {
+      run_id: "research-mutable",
+      seq: 2,
+      type: "registry_queried",
+      decision: "research",
+    },
+    {
+      run_id: "reuse-mutable",
+      seq: 1,
+      type: "run_started",
+      bug_id: "report-buckets",
+      root_cause_class: "mutable default argument",
+    },
+    {
+      run_id: "reuse-mutable",
+      seq: 2,
+      type: "registry_queried",
+      decision: "reuse",
+    },
+    {
+      run_id: "reuse-mutable",
+      seq: 3,
+      type: "skill_reused",
+      skill_id: "mutable-defaults",
+    },
+    {
+      run_id: "research-async",
+      seq: 1,
+      type: "run_started",
+      bug_id: "image-loader",
+      root_cause_class: "blocking call in async code",
+    },
+    {
+      run_id: "research-async",
+      seq: 2,
+      type: "registry_queried",
+      decision: "research",
+    },
+  ];
+  const runs = [
+    {
+      run_id: "research-mutable",
+      tokens: 40_000,
+      seconds: 100,
+      sources_count: 4,
+      outcome: "passed",
+    },
+    {
+      run_id: "reuse-mutable",
+      tokens: 15_000,
+      seconds: 20,
+      sources_count: 0,
+      outcome: "passed",
+    },
+    {
+      run_id: "research-async",
+      tokens: 30_000,
+      seconds: 60,
+      sources_count: 3,
+      outcome: "passed",
+    },
+  ];
+
+  const model = buildDashboardModel({ events, skills: [], runs });
+
+  assert.deepEqual(model.summary, {
+    completed: 3,
+    passed: 3,
+    successRate: 100,
+    totalTokens: 85_000,
+    avoidedTokens: 25_000,
+    averageSeconds: 60,
+    reuseCount: 1,
+  });
+});
+
 test("dashboard loads all three fixture endpoints", async () => {
   const requested = [];
   const responses = {
