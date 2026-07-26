@@ -7,6 +7,12 @@ from kintsugi_agent.live_pair import (
     validate_live_pair,
     validate_research_run,
 )
+from kintsugi_agent.live_pair_cli import (
+    RESEARCH_TEST,
+    REUSE_TEST,
+    _spec,
+)
+from kintsugi_agent.live_pair_cli import build_parser as build_pair_parser
 
 
 class LivePairValidationTests(unittest.TestCase):
@@ -106,6 +112,39 @@ class LivePairValidationTests(unittest.TestCase):
 
         with self.assertRaisesRegex(LivePairError, "zero source_read"):
             validate_live_pair(events, "research", "reuse")
+
+
+class LivePairCliTests(unittest.TestCase):
+    def test_rehearsal_pins_the_same_default_model_as_the_paid_capture(self) -> None:
+        arguments = build_pair_parser().parse_args([])
+
+        self.assertEqual("claude-sonnet-4-6", arguments.model)
+
+    def test_operator_can_rehearse_against_an_explicit_model(self) -> None:
+        arguments = build_pair_parser().parse_args(["--model", "claude-sonnet-5"])
+
+        self.assertEqual("claude-sonnet-5", arguments.model)
+
+    def test_both_rehearsal_runs_carry_the_selected_model(self) -> None:
+        arguments = build_pair_parser().parse_args(
+            ["--model", "claude-sonnet-4-6", "--max-budget-usd", "2.00"]
+        )
+
+        research = _spec(
+            run_id="rehearsal-research-scheduling",
+            bug_id="scheduling",
+            test_id=RESEARCH_TEST,
+            arguments=arguments,
+        )
+        reuse = _spec(
+            run_id="rehearsal-reuse-reports",
+            bug_id="reports",
+            test_id=REUSE_TEST,
+            arguments=arguments,
+        )
+
+        self.assertEqual("claude-sonnet-4-6", research.model)
+        self.assertEqual("claude-sonnet-4-6", reuse.model)
 
 
 if __name__ == "__main__":

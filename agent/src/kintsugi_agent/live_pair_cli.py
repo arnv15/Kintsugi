@@ -52,6 +52,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--registry-command",
         help="Override the Registry stdio command.",
     )
+    parser.add_argument("--model", default="claude-sonnet-4-6")
     parser.add_argument("--max-turns", type=int, default=40)
     parser.add_argument("--max-budget-usd", type=float)
     return parser
@@ -134,6 +135,7 @@ async def run(arguments: argparse.Namespace) -> dict[str, Any]:
         "pair_id": pair_id,
         "outcome": "passed",
         **summary,
+        "model": str(arguments.model),
         "research_worktree": str(research.worktree),
         "reuse_worktree": str(reuse.worktree),
         "events_path": str(events_path),
@@ -155,6 +157,7 @@ def _spec(
         test_command=("python3", "-m", "unittest", test_id, "-v"),
         max_turns=int(arguments.max_turns),
         max_budget_usd=arguments.max_budget_usd,
+        model=str(arguments.model),
     )
 
 

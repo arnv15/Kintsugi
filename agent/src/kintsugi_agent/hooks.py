@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -168,13 +169,30 @@ class RunHooks:
                 text=str(tool_input.get("hypothesis", "")),
             )
         elif tool_name.endswith("__search_skills"):
+            decision = response.get("decision")
+            if decision not in {"research", "reuse"}:
+                raw_response = input_data.get("tool_response")
+                print(
+                    "search_skills returned no usable decision; raw tool_response "
+                    f"was: {raw_response!r}",
+                    file=sys.stderr,
+                )
+                return {
+                    "continue_": False,
+                    "stopReason": (
+                        "The Skill Registry returned an unrecognized response to "
+                        "search_skills, so this Run cannot record a registry_queried "
+                        "decision. Treating the Registry as unreachable and stopping "
+                        "the Run rather than continuing without one."
+                    ),
+                }
             matches = response.get("matches", [])
             top_match = matches[0] if isinstance(matches, list) and matches else {}
             if not isinstance(top_match, dict):
                 top_match = {}
             await self.events.append(
                 "registry_queried",
-                decision=response.get("decision"),
+                decision=decision,
                 top_score=top_match.get("score", 0.0),
                 skill_id=top_match.get("id"),
             )
@@ -242,7 +260,18 @@ class RunHooks:
 
 
 def _response_payload(response: object) -> dict[str, Any]:
-    """Extract a JSON object from direct or MCP-wrapped hook responses."""
+    """Extract a JSON object from direct, string-encoded, or MCP-wrapped hook responses.
+
+    An external stdio MCP tool's response arrives as a raw JSON-encoded string
+    (confirmed against a real Run), not a dict; an in-process SDK tool's
+    response arrives as a flat dict already.
+    """
+    if isinstance(response, str):
+        try:
+            parsed = json.loads(response)
+        except (json.JSONDecodeError, TypeError):
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
     if isinstance(response, dict):
         content = response.get("content")
         if isinstance(content, list):

@@ -15,6 +15,10 @@ uv sync --project agent
 Set up Claude Code authentication (`ANTHROPIC_API_KEY` or an authenticated
 Claude Code installation), then run:
 
+A Claude Team seat works here when Claude Code is signed in with SSO via
+`claude auth login --claudeai --sso`; `claude auth status` should report
+`loggedIn: true` before you start a paid Run.
+
 ```bash
 uv run --project agent kintsugi-agent \
   --run-id scheduling-research \
@@ -66,7 +70,9 @@ Claude Code authentication, this explicit command exercises the real SDK,
 Registry MCP server, hooks, and two fresh worktrees:
 
 ```bash
-uv run --project agent kintsugi-agent-live-pair
+uv run --project agent kintsugi-agent-live-pair \
+  --model claude-sonnet-4-6 \
+  --max-budget-usd 2.00
 ```
 
 It first fixes `scheduling` on the Research Path and publishes the learned
@@ -74,6 +80,14 @@ Skill to a new local Registry. It then fixes the paired `reports` bug in another
 baseline worktree and fails unless that Run reuses the published Skill, reads
 zero web sources, and passes. Artifacts are retained under
 `.kintsugi/live-pairs/<pair-id>/`; use `--pair-id` to name a rehearsal.
+
+`--model` defaults to the same `claude-sonnet-4-6` the six-Run capture pins, so
+a rehearsal predicts the capture's token and wall-clock behaviour. Unlike the
+capture command, `--max-budget-usd` is optional here and omitting it leaves the
+Run uncapped; pass it explicitly when rehearsing. Note that this command
+validates the Research-to-Reuse mechanism only — the strict token and
+wall-clock comparisons are enforced by `kintsugi-agent-live-demo`, so read
+`run_finished` in the retained log to inspect a rehearsal's margins.
 
 ## Capture the paid six-Run demo
 

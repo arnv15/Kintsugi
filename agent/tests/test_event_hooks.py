@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 import tempfile
 import unittest
@@ -118,6 +120,62 @@ class PostToolEventTests(unittest.IsolatedAsyncioTestCase):
             [event["type"] for event in parsed],
         )
         self.assertEqual(list(range(1, 10)), [event["seq"] for event in parsed])
+
+    async def test_unrecognized_registry_decision_stops_the_run_cleanly(self) -> None:
+        """A malformed or unreachable Registry must fail the Run, not crash the host CLI."""
+        stopped = await self.hooks.post_tool_use(
+            {
+                "hook_event_name": "PostToolUse",
+                "tool_name": "mcp__kintsugi-skill-registry__search_skills",
+                "tool_input": {"hypothesis": "Aware datetime arithmetic."},
+                "tool_response": {"content": [{"type": "text", "text": "Registry error: not reachable"}]},
+            },
+            None,
+            {"signal": None},
+        )
+
+        self.assertFalse(stopped["continue_"])
+        self.assertEqual([], await self.events.events())
+
+    async def test_unrecognized_registry_decision_logs_the_raw_response_for_diagnosis(
+        self,
+    ) -> None:
+        """The exact malformed payload must be diagnosable without another paid Run."""
+        captured = io.StringIO()
+        raw_response = {"content": [{"type": "text", "text": "Registry error: not reachable"}]}
+        with contextlib.redirect_stderr(captured):
+            await self.hooks.post_tool_use(
+                {
+                    "hook_event_name": "PostToolUse",
+                    "tool_name": "mcp__kintsugi-skill-registry__search_skills",
+                    "tool_input": {"hypothesis": "Aware datetime arithmetic."},
+                    "tool_response": raw_response,
+                },
+                None,
+                {"signal": None},
+            )
+
+        self.assertIn("search_skills", captured.getvalue())
+        self.assertIn("not reachable", captured.getvalue())
+
+    async def test_search_skills_response_arrives_as_a_json_encoded_string(
+        self,
+    ) -> None:
+        """The live CLI hands external stdio MCP tool responses as a raw JSON string,
+        not a dict — confirmed against a real rehearsal Run's captured payload."""
+        await self.post(
+            "mcp__kintsugi-skill-registry__search_skills",
+            {"hypothesis": "Aware datetime arithmetic used the wrong time semantics."},
+            '{"decision":"research","threshold":70,"matches":[]}',
+        )
+
+        self.assertEqual(
+            ["registry_queried"],
+            [event["type"] for event in await self.events.events()],
+        )
+        registered = await self.events.latest("registry_queried")
+        assert registered is not None
+        self.assertEqual("research", registered["decision"])
 
     async def test_reuse_decision_denies_web_fetch(self) -> None:
         await self.events.append(
