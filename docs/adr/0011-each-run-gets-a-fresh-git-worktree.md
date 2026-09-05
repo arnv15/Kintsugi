@@ -1,8 +1,12 @@
 ---
-status: accepted
+status: superseded
+superseded_by: "0014"
 ---
 
 # Each Run gets a fresh git worktree off a tagged baseline
+
+> **Superseded by [ADR-0014](0014-kintsugi-is-an-mcp-server-not-an-agent.md).**
+> Kintsugi no longer creates Run isolation; the host agent owns its workspace.
 
 The sandbox repo is tagged `baseline` at its seeded commit. Every Run is given its
 own `git worktree` created from that tag, and works only inside it.

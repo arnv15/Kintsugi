@@ -5,7 +5,8 @@
       "args": ["run", "--project", "registry", "kintsugi-registry"],
       "env": {
         "KINTSUGI_SKILLS_REMOTE": "https://github.com/arnv15/kintsugi-skills.git",
-        "KINTSUGI_SANDBOX_REPO": "sandbox"
+        "KINTSUGI_SANDBOX_REPO": "sandbox",
+        "KINTSUGI_EVENTS_PATH": "events.jsonl"
       }
     }
   }

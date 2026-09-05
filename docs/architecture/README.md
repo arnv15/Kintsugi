@@ -1,146 +1,121 @@
 # Kintsugi architecture
 
-Kintsugi is a bug-fixing agent that keeps what it learns. When it verifies a
-fix, it turns the reusable reasoning into a portable Skill. A later agent facing
-the same Root Cause Class can reuse that Skill instead of repeating the
-research.
+Kintsugi is a Skill Registry that any coding agent can connect to over MCP. When
+an agent verifies a bug fix, it publishes the reusable reasoning as a portable
+Skill. A later agent — on a different machine, in a different repo, possibly a
+different product entirely — facing the same Root Cause Class reuses that Skill
+instead of repeating the research.
+
+Kintsugi does not ship an agent. See
+[ADR-0014](../adr/0014-kintsugi-is-an-mcp-server-not-an-agent.md).
 
 This page is the shared map for technical and non-technical teammates. The
 module pages explain the implementation details.
 
 ## Status at a glance
 
-- **Current:** the Seeded Bug sandbox, event fixture/server, dashboard, MCP
-  Skill Registry, agent runtime, guarded six-Run capture command, and repeatable
-  cold-to-warm rehearsal tooling are implemented.
-- **Pending evidence:** the paid six-Run command still needs to produce and
-  validate the real issue #7 capture before that ticket can close.
+- **Current:** the MCP Skill Registry, its git-backed shared store, the two
+  publish/query guards, the registry-level event log, the read-only event
+  server, and the dashboard.
+- **Kept as evaluation fixtures:** the Seeded Bug sandbox and its verifier. They
+  are how reuse gets measured deliberately; they are not part of the tool.
+- **Open:** `publish_skill` has no trust model now that hook enforcement is gone,
+  and Skill ids collide on name with no versioning.
 
 ```mermaid
 mindmap
   root((Kintsugi))
-    Full Run workflow
-      1 Start isolated
-        Choose one Seeded Bug
-        Create fresh worktree from baseline
-        Append run started
-      2 Diagnose
-        Read failing test and source
-        Form one Root Cause Hypothesis
-        Append hypothesis formed
-      3 Ask the Skill Registry
-        Send only the hypothesis over MCP
-        Registry rejects traceback path or line number
-        Registry returns research or reuse
-      4 Follow the chosen path
-        Research Path
-          Search for primary sources
-          Read sources
-          Synthesize cited strategy
-        Reuse Path
-          Retrieve matching SKILL file
-          Install it in the Run worktree
-          Adopt its cited strategy
-      5 Enforce before editing
-        Record strategy and citations
-        Deny all test edits
-        Deny source edits until diagnosis and strategy exist
-      6 Fix and verify
-        Apply repository-specific fix
-        Restore tests from git
-        Run verification
-        Retry once if the first attempt fails
-      7 Preserve learning
-        Passing Research Run
-          Publish portable Skill
-          Store SKILL file in Registry
-        Passing Reuse Run
-          Record Skill reused
-        Failed second attempt
-          Stop without publishing
-      8 Make proof visible
-        Finish Run with factual metrics
-        Append events to events JSONL
-        Event server exposes events Skills and Runs
-        Dashboard derives activity tallies and pair comparisons
+    What the user does
+      1 Connect the Registry
+        Add one MCP server entry
+        Claude Code Codex or Cursor
+      2 Work normally
+        Agent hits a bug
+        Agent diagnoses it
+      3 Ask the Registry
+        Send only a Root Cause Hypothesis
+        Registry refuses traceback path or line number
+        Registry answers research or reuse
+      4 Follow the answer
+        Reuse
+          Fetch the SKILL document
+          Write it into claude skills
+          Agent loads it natively
+        Research
+          Read primary sources
+          Synthesize a cited strategy
+      5 Publish what was learned
+        Only after the fix passes
+        Repo leak guard refuses pasted code
+        Commit and push to the shared Skills repo
     Current modules
-      Seeded Bug sandbox
+      Skill Registry over MCP
+      Git-backed shared Skill store
+      Registry event log
       Event server
       Dashboard
-      Agent runtime
-      Skill Registry over MCP
-      Six Run capture driver
-      Cold-to-warm rehearsal
-    Pending artifacts
-      Real six Run event log
+    Evaluation fixtures
+      Seeded Bug sandbox
+      Sandbox verifier
     Trust rules
-      Citations before code changes
-      Append-only factual event history
-      Pairwise cost time and source metrics
+      Diagnose before you may query
+      A Skill never carries its home repo's code
+      The log records only what the Registry witnessed
 ```
 
 ## End-to-end data flow
 
-Solid boxes marked **current** exist in this repository. Boxes marked
-**planned** describe the accepted design for upcoming tickets.
-
 ```mermaid
 flowchart TD
-  operator["Operator starts a Run, rehearsal, or capture"] --> capture["Six-Run capture driver<br/>current"]
-  capture --> worktree["Fresh worktree from baseline<br/>current"]
-  operator --> scope["Reset isolated rehearsal Skill scope<br/>current"]
-  scope --> worktree["Fresh worktree from baseline<br/>current"]
-  operator --> worktree
-  sandbox["Seeded Bug sandbox<br/>current"] --> worktree
-  worktree --> agent["Agent runtime<br/>current"]
-  agent --> hypothesis["Root Cause Hypothesis"]
-  hypothesis --> registry["Skill Registry over MCP<br/>current"]
+  user["Developer working in their own repo"] --> agent["Any MCP-capable coding agent<br/>Claude Code · Codex · Cursor"]
+  agent --> hypothesis["Root Cause Hypothesis<br/>one sentence of diagnosis"]
+  hypothesis --> registry["Skill Registry over MCP<br/>stdio subprocess"]
 
-  registry -->|decision research| research["Read primary sources"]
-  registry -->|decision reuse| retrieved["Retrieve matching SKILL.md"]
-  research --> strategy["Record cited fix strategy"]
-  retrieved --> install["Install Skill in the Run worktree"]
-  install --> strategy
+  registry -->|"refused"| guard["Not a hypothesis:<br/>traceback, path or line number"]
+  guard --> agent
 
-  strategy --> edit["Hooks permit source edit"]
-  edit --> verify["Restore tests from git and verify"]
-  verify -->|failed and attempt remains| agent
-  verify -->|passed on Research Path| publish["Publish portable Skill"]
-  publish --> registry
-  verify -->|passed| finish["Finish Run"]
+  registry -->|"decision research"| research["Agent reads primary sources"]
+  registry -->|"decision reuse"| retrieved["get_skill returns an<br/>installable SKILL.md"]
+  retrieved --> install[".claude/skills/&lt;id&gt;/SKILL.md<br/>loaded natively"]
 
-  agent -. "append factual events" .-> log["events.jsonl"]
-  finish -. "append outcome and metrics" .-> log
-  log --> validate["Strict six-Run acceptance validator<br/>current"]
-  registry <--> store["Skill folders containing SKILL.md<br/>current"]
-  store --> eventServer["Read-only event server<br/>current"]
-  log --> eventServer
+  research --> fix["Agent fixes the bug"]
+  install --> fix
+  fix --> publish["publish_skill<br/>after tests pass"]
+  publish --> leak{"Repo leak guard"}
+  leak -->|"code found in the repo"| rewrite["Refused with feedback:<br/>rewrite the snippet synthetically"]
+  rewrite --> publish
+  leak -->|"clean"| store["Skill folders containing SKILL.md<br/>git worktree, pushed to the shared repo"]
+
+  registry <--> store
+  registry -. "append what it witnessed" .-> log["events.jsonl<br/>opt-in"]
+  log --> eventServer["Read-only event server"]
+  store --> eventServer
   eventServer --> endpoints["GET /events<br/>GET /skills<br/>GET /runs"]
-  endpoints --> dashboard["Dashboard<br/>current"]
-  dashboard --> audience["Inspectable activity, reuse tallies,<br/>and within-class comparisons"]
+  endpoints --> dashboard["Dashboard"]
+
+  sandbox["Seeded Bug sandbox<br/>evaluation fixture"] -.-> measure["Deliberate reuse measurement"]
 ```
 
-The important trust split is deliberate:
+The trust split of [ADR-0007](../adr/0007-the-agent-writes-an-append-only-event-log-and-computes-nothing.md)
+is intact, with a smaller author:
 
-1. The **agent records facts** such as tool use, sources, test results, tokens,
-   and elapsed seconds.
+1. The **Registry records facts** — the decisions it made, the Skills that left
+   it, the Skills published to it.
 2. The **event server reads and reshapes** those facts without deciding what
    they mean.
-3. The **dashboard derives conclusions** such as reuse success tallies and
-   Research Path versus Reuse Path comparisons.
+3. The **dashboard derives conclusions** such as reuse tallies.
 
-The thing being measured therefore does not grade its own work.
+What changed is that the Registry can no longer witness token counts, wall-clock,
+test results or patches. Those event types are **absent rather than estimated**.
 
 ## Module guide
 
 | Area | Status | What it is for | Detailed page |
 | --- | --- | --- | --- |
-| Event server | Current | Makes the event log and Skills readable over HTTP without calculating conclusions | [Event server](event-server.md) |
-| Dashboard | Current | Turns raw facts into a human-readable activity feed, Skill cards, and pair comparisons | [Dashboard](dashboard.md) |
 | Skill Registry | Current | Lets any MCP-capable agent find, retrieve, publish, and list portable Skills | [Skill Registry](skill-registry.md) |
-| Agent runtime | Current | Runs the diagnosis, research/reuse, edit, verification, and event-writing loop | [Agent runtime](agent-runtime.md) |
-| Seeded Bug sandbox | Current | Supplies six controlled bugs and a clean baseline for fair, isolated Runs | [Sandbox](sandbox.md) |
-| Rehearsal tooling | Current | Resets one isolated Registry scope and proves the first sandbox pair takes Research then Reuse without cleanup | [Agent runtime](agent-runtime.md) |
+| Event server | Current | Makes the event log and Skills readable over HTTP without calculating conclusions | [Event server](event-server.md) |
+| Dashboard | Current | Turns raw facts into a readable activity feed and Skill cards | [Dashboard](dashboard.md) |
+| Seeded Bug sandbox | Fixture | Six controlled bugs in matched pairs, for measuring reuse deliberately | [Sandbox](sandbox.md) |
 
 ## Shared contracts
 
@@ -148,54 +123,41 @@ The thing being measured therefore does not grade its own work.
 
 Use the terms in [`CONTEXT.md`](../../CONTEXT.md), especially **Root Cause
 Class**, **Root Cause Hypothesis**, **Skill**, **Skill Registry**, **Run**,
-**Research Path**, and **Reuse Path**. Avoid cache language such as “hit” and
-“miss”: the Registry returns the next action, `research` or `reuse`.
+**Session**, **Research Path**, and **Reuse Path**. Avoid cache language such as
+"hit" and "miss": the Registry returns the next action, `research` or `reuse`.
 
 ### Event log
 
 Every event is one JSON object on one line and carries `ts`, `run_id`, `seq`,
-and `type`. The accepted event types are:
+and `type`. The Registry may only record what it observes first-hand:
 
 ```text
-run_started
-hypothesis_formed
 registry_queried
-source_read
-strategy_recorded
-patch_applied
-tests_run
+skill_retrieved
 skill_published
-skill_reused
-run_finished
 ```
 
-The log is append-only. It records facts, never derived speedup or confidence
-claims.
+`run_id` carries a **Session** id — one agent's connection to the Registry —
+because the Registry cannot see where a Run begins or ends. The field keeps its
+name so the event server and dashboard read the log unchanged.
+
+`skill_retrieved` is deliberately not named `skill_reused`: the Registry watched
+a document leave, which is a weaker claim than a Skill having produced a passing
+fix. Logging is opt-in via `KINTSUGI_EVENTS_PATH`; unset, nothing is recorded.
+
+The older, richer vocabulary (`run_started`, `hypothesis_formed`, `source_read`,
+`strategy_recorded`, `patch_applied`, `tests_run`, `skill_reused`,
+`run_finished`) is still what [`fixtures/events.jsonl`](../../fixtures/events.jsonl)
+contains and what the dashboard renders, so a host that can produce those events
+itself remains fully supported.
 
 ### Skill storage
 
 A Skill is a folder containing a Claude Code-compatible `SKILL.md`. The file is
 the source of truth; there is no database mirror. A retrieved Skill is installed
-under `.claude/skills/<skill-id>/SKILL.md` in the Run's isolated worktree so the
-agent runtime can load it natively.
-
-## Dependency order
-
-```mermaid
-flowchart LR
-  event["Event server and fixture<br/>#2 complete"] --> runtime["Agent runtime<br/>#6 complete"]
-  sandbox["Sandbox and baseline<br/>#3 complete"] --> runtime
-  registry["Skill Registry<br/>#4 complete"] --> runtime
-  event --> dashboard["Dashboard<br/>#5 implemented"]
-  runtime --> capture["Six-Run capture driver<br/>#7 implemented"]
-  capture --> evidence["Real paid capture<br/>#7 pending"]
-  runtime --> rehearsal["Rehearsal tooling<br/>#8 complete"]
-  registry --> rehearsal
-```
-
-The dashboard was intentionally built against the fixture. When the agent
-starts writing real events, the same HTTP and event contracts should let the
-dashboard consume them without changing its core projection logic.
+under `.claude/skills/<skill-id>/SKILL.md` so the connected agent loads it
+natively — and because that is all a Skill is, the shared Skills repo can be
+cloned straight into `.claude/skills/` with no server running at all.
 
 ## Source decisions
 
@@ -203,9 +165,11 @@ The architecture is constrained by the accepted decisions in
 [`docs/adr/`](../adr/), particularly:
 
 - [ADR-0001: Registry over MCP](../adr/0001-skill-registry-is-an-mcp-server-not-a-library.md)
+- [ADR-0002: Skills are `SKILL.md`, guarded against repo leakage](../adr/0002-skills-are-claude-code-skill-documents.md)
 - [ADR-0003: retrieval by Root Cause Hypothesis](../adr/0003-skills-are-retrieved-by-root-cause-hypothesis-not-error-text.md)
 - [ADR-0005: no fix without a citation](../adr/0005-no-fix-without-a-citation.md)
 - [ADR-0007: append-only factual event log](../adr/0007-the-agent-writes-an-append-only-event-log-and-computes-nothing.md)
-- [ADR-0008: Agent SDK hooks enforce rules](../adr/0008-the-agent-is-the-claude-agent-sdk-with-hooks-as-enforcement.md)
-- [ADR-0011: fresh worktree per Run](../adr/0011-each-run-gets-a-fresh-git-worktree.md)
-- [ADR-0013: two attempts and publish only on green](../adr/0013-two-attempts-publish-only-on-green.md)
+- [ADR-0014: Kintsugi is an MCP server, not an agent](../adr/0014-kintsugi-is-an-mcp-server-not-an-agent.md)
+
+ADRs 0008 through 0013 described the removed Agent SDK runtime and are retained
+as superseded history.

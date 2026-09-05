@@ -37,10 +37,13 @@ to demonstrate.
   only). A rejection is retried with feedback, never a hard failure.
 - The guard is a claim we can state as checkable rather than promised: Skills are
   *prevented* from carrying code out of the repo they were learned in.
-- This format choice turned out to be worth more than portability alone. The
-  Claude Agent SDK chosen in ADR-0008 loads skills from `.claude/skills/*/SKILL.md`,
-  so a retrieved Skill is *installed as a file* and loaded natively rather than
-  pasted into a prompt.
+- This format choice turned out to be worth more than portability alone. Claude
+  Code and every agent that follows its convention load skills from
+  `.claude/skills/*/SKILL.md`, so a retrieved Skill is *installed as a file* and
+  loaded natively rather than pasted into a prompt. Under
+  [ADR-0014](0014-kintsugi-is-an-mcp-server-not-an-agent.md) this became the
+  distribution story outright: the Skills repo clones straight into
+  `.claude/skills/` and works with no server running.
 - The fast path stays genuinely fast but is not instant — roughly a few times
   faster, not orders of magnitude, because the agent must still locate the defect
   and write the patch itself. Demo narration must not promise "near-instant".

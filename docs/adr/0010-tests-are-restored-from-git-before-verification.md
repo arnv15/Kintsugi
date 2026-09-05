@@ -1,8 +1,12 @@
 ---
-status: accepted
+status: superseded
+superseded_by: "0014"
 ---
 
 # Tests are restored from git before every verification run
+
+> **Superseded by [ADR-0014](0014-kintsugi-is-an-mcp-server-not-an-agent.md).**
+> Kintsugi no longer runs verification, so it cannot restore tests before one.
 
 `git checkout -- tests/` runs immediately before the test command that decides
 whether a Seeded Bug is fixed. The tests a fix is judged against are therefore

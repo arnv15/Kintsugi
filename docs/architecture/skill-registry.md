@@ -91,7 +91,7 @@ Examples:
 2. The agent calls `get_skill(id)`.
 3. It writes the returned content to
    `.claude/skills/<id>/SKILL.md` inside the Run's worktree.
-4. The Agent SDK loads the Skill natively.
+4. The connected agent loads the Skill natively from `.claude/skills/`.
 5. The agent records the Skill's cited strategy, emits `skill_reused`, and
    proceeds without `WebFetch`.
 

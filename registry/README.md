@@ -17,6 +17,7 @@ It speaks MCP over stdio. Three environment variables configure it:
 | `KINTSUGI_SKILLS_DIR` | Where Skills are stored. Defaults to `~/.kintsugi/skills` — a user-level path, not a repo-level one, because the Registry is shared across repos and machines. |
 | `KINTSUGI_SKILLS_REMOTE` | The shared Skills repo. If the Skill directory doesn't exist yet, the first run clones this into it. |
 | `KINTSUGI_SANDBOX_REPO` | The repo Skills are being learned in. Set it and the repo-leak guard runs on every publish, whether or not the caller passes `repo_path`. |
+| `KINTSUGI_EVENTS_PATH` | Where to append the event log. Unset, nothing is recorded — a shared server should not accumulate a history of every query nobody asked it to keep. |
 
 ## The shared Skills repo
 
@@ -55,7 +56,7 @@ KINTSUGI_SKILLS_REMOTE=https://github.com/arnv15/kintsugi-skills.git \
 
 Publishing needs push access to the Skills repo; reading does not.
 
-To register it with a Claude Agent SDK client or a Claude Code instance:
+To register it with any MCP-capable agent (Claude Code, Codex, Cursor):
 
 ```json
 {
@@ -106,6 +107,32 @@ Three rules are mechanisms here rather than instructions:
 aliases, no `sources`, no `published_by` — comes back as `warnings` on a
 successful publish, because refusing a sound Skill mid-Run is worse than storing
 a thin one.
+
+## The event log
+
+Set `KINTSUGI_EVENTS_PATH` and the Registry appends one JSON object per line for
+each thing it witnesses directly:
+
+| Event | Written when |
+| --- | --- |
+| `registry_queried` | `search_skills` reached a decision — carries `decision`, `top_score`, `skill_id` |
+| `skill_retrieved` | `get_skill` handed a document out |
+| `skill_published` | `publish_skill` accepted a Skill |
+
+Three properties are deliberate:
+
+- **It records only what the Registry saw.** No token counts, wall-clock, test
+  results or patches — the server never observes those, so they are absent
+  rather than estimated.
+- **`skill_retrieved` is not `skill_reused`.** A document left the Registry; that
+  is a weaker claim than a Skill having produced a passing fix, and the log makes
+  the weaker claim.
+- **A refusal writes nothing.** A rejected hypothesis or a rejected publish means
+  no decision was made, and the log holds only decisions.
+
+`run_id` carries a **session** id — one agent's connection to this server — since
+the Registry cannot see where a Run begins or ends. The field keeps that name so
+the bundled event server and dashboard read the log unchanged.
 
 ## Resetting between rehearsals
 

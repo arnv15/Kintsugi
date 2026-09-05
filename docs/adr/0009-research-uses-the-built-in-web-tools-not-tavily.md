@@ -1,8 +1,12 @@
 ---
-status: accepted
+status: superseded
+superseded_by: "0014"
 ---
 
 # The Research Path uses the SDK's built-in web tools; Tavily is dropped
+
+> **Superseded by [ADR-0014](0014-kintsugi-is-an-mcp-server-not-an-agent.md).**
+> Research tooling is now the host agent's concern; Kintsugi supplies no tools.
 
 Research is done with the Claude Agent SDK's built-in `WebSearch` and `WebFetch`
 tools. The originally planned Tavily integration is out of scope.

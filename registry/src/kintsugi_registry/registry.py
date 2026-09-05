@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from .config import SANDBOX_REPO_ENV_VAR, resolve_sandbox_repo
+from .events import EventLog, NoEventLog
 from .errors import RegistryError, SkillNotFound
 from .hypothesis import require_root_cause_hypothesis
 from .leakcheck import Leak, find_leaks
@@ -34,10 +35,16 @@ Skill mid-Run, so a thin Skill publishes and says so.
 class SkillRegistry:
     """The shared store of Skills, reachable by any agent over MCP."""
 
-    def __init__(self, skills_dir: Path, threshold: float = DEFAULT_THRESHOLD) -> None:
+    def __init__(
+        self,
+        skills_dir: Path,
+        threshold: float = DEFAULT_THRESHOLD,
+        events: EventLog | NoEventLog | None = None,
+    ) -> None:
         self.store = SkillStore(Path(skills_dir))
         self.threshold = threshold
         self.sync = build_sync(self.store.root)
+        self.events = events if events is not None else NoEventLog()
 
     def refresh(self) -> dict[str, Any]:
         """Bring the Skill directory up to date with the shared repo.
@@ -66,8 +73,17 @@ class SkillRegistry:
         """
         hypothesis = require_root_cause_hypothesis(hypothesis)
         matches = rank_skills(hypothesis, self.store.load_all().skills, self.threshold)
+        decision = "reuse" if matches else "research"
+        # Recorded after the guard, so a refused query leaves no event: the
+        # Registry never made a decision, and the log holds only decisions.
+        self.events.append(
+            "registry_queried",
+            decision=decision,
+            top_score=matches[0].score if matches else 0.0,
+            skill_id=matches[0].skill.id if matches else None,
+        )
         return {
-            "decision": "reuse" if matches else "research",
+            "decision": decision,
             "threshold": self.threshold,
             "matches": [
                 {
@@ -110,6 +126,7 @@ class SkillRegistry:
             raise SkillNotFound(
                 f"No Skill with id '{skill_id}'. Call list_skills to see the available ids."
             )
+        self.events.append("skill_retrieved", skill_id=skill.id, name=skill.name)
         return _skill_payload(skill)
 
     def publish_skill(
@@ -148,6 +165,7 @@ class SkillRegistry:
 
         replaced = self.store.exists(skill.id)
         self.store.save(skill)
+        self.events.append("skill_published", skill_id=skill.id, name=skill.name)
         # Sync only after the Skill is safely on disk, so a failure to reach the
         # shared repo costs the push and never the Skill itself.
         pushed = self.sync.record(skill.id, skill.published_by)

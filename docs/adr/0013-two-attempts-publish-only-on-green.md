@@ -1,8 +1,12 @@
 ---
-status: accepted
+status: superseded
+superseded_by: "0014"
 ---
 
 # Two attempts per Run, and a Skill is published only on passing tests
+
+> **Superseded by [ADR-0014](0014-kintsugi-is-an-mcp-server-not-an-agent.md).**
+> Attempt limits and publish-on-green were hook-enforced; see ADR-0014's consequences.
 
 A Run gets two attempts at a Seeded Bug. A Skill is published only after the test
 suite passes. Failed Runs appear in the activity feed but not in the chart.

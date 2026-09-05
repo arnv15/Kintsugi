@@ -1,8 +1,12 @@
 ---
-status: accepted
+status: superseded
+superseded_by: "0014"
 ---
 
 # The agent is the Claude Agent SDK, and hooks are the enforcement mechanism
+
+> **Superseded by [ADR-0014](0014-kintsugi-is-an-mcp-server-not-an-agent.md).**
+> The bundled Agent SDK runtime is removed; Kintsugi ships only the MCP Registry.
 
 The agent runs on the Claude Agent SDK (`claude-agent-sdk` / `@anthropic-ai/claude-agent-sdk`)
 — Claude Code as a library — rather than a hand-rolled tool-use loop on the plain

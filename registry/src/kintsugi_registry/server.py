@@ -9,11 +9,14 @@ within (a hypothesis and nothing else; the decision is the Registry's).
 from __future__ import annotations
 
 import sys
+from datetime import UTC, datetime
 from typing import Any
+from uuid import uuid4
 
 from mcp.server.fastmcp import FastMCP
 
 from .config import resolve_skills_dir, resolve_skills_remote
+from .events import build_event_log, resolve_events_path
 from .hypothesis import EXAMPLE_HYPOTHESIS
 from .registry import SkillRegistry
 from .sync import ensure_clone
@@ -131,10 +134,32 @@ def main() -> None:
     skills_dir = resolve_skills_dir()
     print(ensure_clone(skills_dir, resolve_skills_remote()), file=sys.stderr)
 
-    registry = SkillRegistry(skills_dir=skills_dir)
+    events_path = resolve_events_path()
+    session_id = new_session_id()
+    registry = SkillRegistry(
+        skills_dir=skills_dir,
+        events=build_event_log(events_path, session_id),
+    )
     print(registry.refresh()["detail"], file=sys.stderr)
+    print(
+        f"Recording events as session '{session_id}' in {events_path}."
+        if events_path is not None
+        else "No event log configured; set $KINTSUGI_EVENTS_PATH to record one.",
+        file=sys.stderr,
+    )
 
     build_server(registry).run()
+
+
+def new_session_id() -> str:
+    """Name one agent's connection to the Registry.
+
+    One server process is one client's stdio connection, so the process lifetime
+    is the closest thing to a session the Registry can observe. The timestamp
+    makes a log readable in order; the suffix keeps two agents that connect in
+    the same second apart.
+    """
+    return f"{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}-{uuid4().hex[:8]}"
 
 
 if __name__ == "__main__":  # pragma: no cover

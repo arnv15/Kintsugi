@@ -1,4 +1,5 @@
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
+const REUSE_TYPES = new Set(["skill_reused", "skill_retrieved"]);
 const EVIDENCE_TYPES = new Set([
   "run_started",
   "hypothesis_formed",
@@ -53,6 +54,8 @@ function describeEvent(event) {
       return `Published “${event.name}” as a reusable Skill.`;
     case "skill_reused":
       return `Reused “${event.name}” instead of researching the root cause again.`;
+    case "skill_retrieved":
+      return `Took “${event.name}” from the Registry instead of researching the root cause again.`;
     case "run_finished":
       return event.outcome === "passed"
         ? `Finished successfully in ${formatDuration(event.seconds)}.`
@@ -71,8 +74,7 @@ function buildSkillCards(skills, events) {
 
   return skills.map((skill) => {
     const reuses = events.filter(
-      (event) =>
-        event.type === "skill_reused" && event.skill_id === skill.id,
+      (event) => REUSE_TYPES.has(event.type) && event.skill_id === skill.id,
     );
 
     return {
@@ -175,7 +177,7 @@ function buildSummary(runs, events, comparisons) {
     totalTokens,
     avoidedTokens,
     averageSeconds: completed ? Math.round(totalSeconds / completed) : 0,
-    reuseCount: events.filter((event) => event.type === "skill_reused").length,
+    reuseCount: events.filter((event) => REUSE_TYPES.has(event.type)).length,
   };
 }
 

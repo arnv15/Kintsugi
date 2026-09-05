@@ -16,7 +16,7 @@ _Avoid_: bug type, error type, bug category, error class
 **Seeded Bug**:
 A defect deliberately authored into the sandbox repo, together with the test that
 catches it. Two Seeded Bugs of the same Root Cause Class are deliberately unalike
-on the surface.
+on the surface. They are evaluation fixtures, not part of the shipped tool.
 _Avoid_: planted bug, fixture bug, test case
 
 **Skill**:
@@ -35,9 +35,16 @@ query.
 _Avoid_: error signature, search term, query string
 
 **Run**:
-One attempt by the agent at one Seeded Bug, from first reading the failing test to
-a verified fix or a give-up. The unit everything is measured per.
+One attempt by a connected agent at one bug, from first reading the failure to a
+verified fix or a give-up. Kintsugi does not run it and cannot see its
+boundaries; the Registry observes only the part that reaches the Registry.
 _Avoid_: session, job, task, episode
+
+**Session**:
+One agent's connection to the Skill Registry — the lifetime of one server
+process. The widest unit Kintsugi can actually observe, and what `run_id`
+identifies in the event log.
+_Avoid_: run, connection, client
 
 **Reuse Path**:
 The route taken when the Registry finds a Skill for the Root Cause Hypothesis:

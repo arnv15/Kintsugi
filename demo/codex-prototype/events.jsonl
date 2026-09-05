@@ -1,9 +1,0 @@
-{"ts":"2026-07-26T02:20:02.144Z","run_id":"codex-demo-off_by_one","seq":1,"type":"run_started","bug_id":"off_by_one","root_cause_class":"Off-by-one slice boundary"}
-{"ts":"2026-07-26T02:20:02.145Z","run_id":"codex-demo-off_by_one","seq":2,"type":"hypothesis_formed","text":"An off-by-one slice boundary drops the newest item instead of keeping it."}
-{"ts":"2026-07-26T02:20:02.465Z","run_id":"codex-demo-off_by_one","seq":3,"type":"registry_queried","decision":"research","top_score":0.0,"skill_id":null}
-{"ts":"2026-07-26T02:20:02.465Z","run_id":"codex-demo-off_by_one","seq":4,"type":"source_read","url":"https://docs.python.org/3/reference/expressions.html#slicings","title":"6.3.4. Slicings \u2014 Python Language Reference"}
-{"ts":"2026-07-26T02:20:02.465Z","run_id":"codex-demo-off_by_one","seq":5,"type":"strategy_recorded","text":"Use orders[-n:] rather than orders[-n - 1 : -1] so the slice keeps the most recent item.","sources":["https://docs.python.org/3/reference/expressions.html#slicings"]}
-{"ts":"2026-07-26T02:20:02.465Z","run_id":"codex-demo-off_by_one","seq":6,"type":"patch_applied","files_touched":["problems/off_by_one/inventory.py"]}
-{"ts":"2026-07-26T02:20:02.465Z","run_id":"codex-demo-off_by_one","seq":7,"type":"tests_run","passed":1,"failed":0,"output_tail":"Ran 1 test in 0.001s\n\nOK"}
-{"ts":"2026-07-26T02:20:02.465Z","run_id":"codex-demo-off_by_one","seq":8,"type":"skill_published","skill_id":"off-by-one-slice-boundary","name":"Off-by-one slice boundary"}
-{"ts":"2026-07-26T02:20:02.465Z","run_id":"codex-demo-off_by_one","seq":9,"type":"run_finished","outcome":"passed","tokens":41823,"cost_usd":0.14,"seconds":27.4,"sources_count":1}

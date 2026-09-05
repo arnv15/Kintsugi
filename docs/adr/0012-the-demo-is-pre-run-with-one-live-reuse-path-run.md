@@ -1,8 +1,12 @@
 ---
-status: accepted
+status: superseded
+superseded_by: "0014"
 ---
 
 # The demo is pre-run, with one live Reuse-Path Run
+
+> **Superseded by [ADR-0014](0014-kintsugi-is-an-mcp-server-not-an-agent.md).**
+> The six-Run capture depended on the removed runtime.
 
 All six Runs are executed before presenting. The dashboard presents from the
 resulting event log. One Run — the second instance of the first Root Cause Class —
